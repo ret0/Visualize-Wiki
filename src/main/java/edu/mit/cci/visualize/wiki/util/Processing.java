@@ -5,9 +5,8 @@ import java.io.FileReader;
 
 public class Processing {
 
-	//public String processingCode(String location,String edges, String loginUser, String path, String userName_editSize, String size) {
 	public String processingCode(final String nodes,final String edges, final String path, final String size) {
-		//List<String> user = new LinkedList<String>();
+
 		String code = "";
 		String eol = "\n";
 		String firstName = "";
@@ -50,11 +49,7 @@ public class Processing {
 
 		}
 		try {
-			// data = user_name\t# of edits\tx_position\ty_position
-			/*String[] datum = location.split("\n");
-			for (int i = 0; i < datum.length; i++) {
-				user.add(datum[i].split("\t")[0]);
-			}*/
+
 			// Read skeleton code
 			BufferedReader br = new BufferedReader(new FileReader(path));
 			String line = "";
@@ -111,7 +106,6 @@ public class Processing {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		//System.out.println(code);
 		return code;
 	}
 }

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public class MapSorter {
+
 	public List<String> sortMap(final String data, int rank) {
 		//log.info(data);
 		List<String> output = new LinkedList<String>();
