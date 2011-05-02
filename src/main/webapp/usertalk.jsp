@@ -12,7 +12,7 @@
 	<link href="css/flexgrid.css" rel="stylesheet" type="text/css" />
 	<script type="text/javascript" src="js/jquery-1.2.1.js"></script>
 	<script type="text/javascript" src="js/treemap.js"></script>
-	<script type="text/javascript" src="js/processing.js"></script>
+	<script type="text/javascript" src="js/processing-1.1.0.min.js"></script>
 	<script type="text/javascript" src="js/init.js"></script>
 </head>
 

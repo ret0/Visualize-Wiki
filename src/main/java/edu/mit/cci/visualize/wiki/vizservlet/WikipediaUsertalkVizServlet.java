@@ -75,15 +75,14 @@ public class WikipediaUsertalkVizServlet {
                                          final String lang,
                                          final String nodes) {
         String edges = GetUsertalkNetwork.getNetwork(lang, nodes);
-        String code = "";
         if (edges.length() > 0) {
             LOG.info(nodes);
             LOG.info(edges);
             Processing pro = new Processing();
             String path = context.getRealPath("/skelton/skelton_spring.js");
-            code = pro.processingCode(nodes, edges, path, canvasSize);
+            return pro.processingCode(nodes, edges, path, canvasSize);
         }
-        return code;
+        return "";
     }
 
     private String writeProcessingCode(final String canvasSize,

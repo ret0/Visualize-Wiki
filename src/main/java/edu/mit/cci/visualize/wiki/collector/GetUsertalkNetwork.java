@@ -31,7 +31,7 @@ public class GetUsertalkNetwork {
 					String to = node[j].split("\t")[0];
 					to = to.replaceAll(" ", "_");
 
-					String xml = getUserTalkContribs(lang, to,from,"");
+					String xml = getUserTalkContribs(lang, to, from, "");
 					if (xml.indexOf("<revisions>") > 0) {
 						log.info(xml);
 						XMLParseUserTalk parse = new XMLParseUserTalk(to,result,xml);

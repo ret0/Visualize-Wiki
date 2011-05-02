@@ -1,99 +1,141 @@
 package edu.mit.cci.visualize.wiki.collector;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.logging.Logger;
 
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpResponseInterceptor;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.GzipDecompressingEntity;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import edu.mit.cci.visualize.wiki.util.Const;
 
 public class GetRevisions {
-	private static final Logger log = Logger.getLogger(GetRevisions.class.getName());
 
-	public String getArticleRevisions(final String lang, String title, final int limit) {
-		String data = "";
-		Result result = new Result();
+    private final static Logger LOG = LoggerFactory.getLogger(GetRevisions.class.getName());
 
-		try {
-			title = title.replaceAll(" ", "_");
-			String xml = getArticleRevisionsXML(lang, title,"");
+    public String getArticleRevisions(final String lang,
+                                      String title,
+                                      final int limit) {
+        String data = "";
+        Result result = new Result();
 
-			XMLParseRevision parse = new XMLParseRevision(title,result,xml);
-			//parse.setUserName(userName);
-			parse.parse();
-			int count = 0;
-			while(result.hasNextId()) {
-				count++;
-				if (limit != 0 && count >= limit) {
-					break;
-				}
-				String nextId = result.getNextId();
-				data += result.getResult();
-				result.clear();
-				//tmpData.clear();
-				xml = getArticleRevisionsXML(lang, title, nextId);
-				parse = new XMLParseRevision(title,result,xml);
-				parse.parse();
-			}
-			data += result.getResult();
-		}catch(Exception e) {
-			e.printStackTrace();
-		}
-		return data;
-	}
+        DefaultHttpClient httpclient = new DefaultHttpClient();
+        addGzipRequestInterceptor(httpclient);
+        addGzipResponseInterceptor(httpclient);
 
+        title = title.replaceAll(" ", "_");
 
-	private String getArticleRevisionsXML(final String lang, String pageid, final String nextId) {
-		String rvstartid = "&rvstartid=" + nextId;
-		if (nextId.equals("")) {
-			rvstartid = "";
-		}
-		String xml = "";
+        try {
+            String xml = getArticleRevisionsXML(lang, title, "", httpclient);
+            XMLParseRevision parse = new XMLParseRevision(title, result, xml);
+            parse.parse();
+            int count = 0;
+            while (result.hasNextId()) {
+                count++;
+                if (limit != 0 && count >= limit) {
+                    break;
+                }
+                String nextId = result.getNextId();
+                data += result.getResult();
+                result.clear();
+                xml = getArticleRevisionsXML(lang, title, nextId, httpclient);
+                parse = new XMLParseRevision(title, result, xml);
+                parse.parse();
+            }
+            data += result.getResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            httpclient.getConnectionManager().shutdown();
+        }
+        return data;
+    }
 
-		try {
-			//String urlStr = "http://en.wikipedia.org/w/api.php";
-			pageid = URLEncoder.encode(pageid,"UTF-8");
+    private String getArticleRevisionsXML(final String lang,
+                                          String pageid,
+                                          final String nextId,
+                                          final HttpClient httpclient)
+            throws UnsupportedEncodingException {
+        String rvstartid = "&rvstartid=" + nextId;
+        if (nextId.equals("")) {
+            rvstartid = "";
+        }
 
-			String urlStr = "http://" + lang + ".wikipedia.org/w/api.php?format=xml&action=query&prop=revisions&titles="+pageid+"&rvlimit=500&rvprop=flags%7Ctimestamp%7Cuser%7Csize&rvdir=older"+rvstartid;
-			//urlStr = URLEncoder.encode(urlStr);
-			log.info("Requesting URL: " + urlStr);
-			URL url = new URL(urlStr);
-			HttpURLConnection urlCon = (HttpURLConnection)url.openConnection();
-			urlCon.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_3; ja-jp) AppleWebKit/533.16 (KHTML, like Gecko) Version/5.0 Safari/533.16");
-			urlCon.setRequestMethod("GET");
-			urlCon.setInstanceFollowRedirects(false);
-			/*urlCon.addRequestProperty("format", "xml");
-            urlCon.addRequestProperty("action", "query");
-            urlCon.addRequestProperty("prop", "revisions");
-            urlCon.addRequestProperty("titles", pageid);
-            urlCon.addRequestProperty("rvlimit", "500");
-            urlCon.addRequestProperty("rvprop", "flags|timestamp|user|size");
-            urlCon.addRequestProperty("rvdir", "newer");*/
+        pageid = URLEncoder.encode(pageid, Const.ENCODING);
 
-			urlCon.connect();
-			//urlCon.setRequestProperty("titles", pageid);
+        String urlStr = "http://" + lang
+                + ".wikipedia.org/w/api.php?format=xml&action=query&prop=revisions&titles=" + pageid
+                + "&rvlimit=500&rvprop=flags%7Ctimestamp%7Cuser%7Csize&rvdir=older" + rvstartid;
+        LOG.info("Requesting URL: " + urlStr);
+        return executeHTTPRequest(urlStr, httpclient);
+    }
 
-			BufferedReader reader = new BufferedReader(new InputStreamReader(urlCon.getInputStream()));
-			//BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-			String line;
+    private String executeHTTPRequest(final String url,
+                                      final HttpClient httpclient) {
+        try {
+            HttpGet httpget = new HttpGet(url);
+            httpget.setHeader("User-Agent", Const.USER_AGENT);
+            LOG.debug("executing request " + httpget.getURI());
+            HttpResponse response = httpclient.execute(httpget);
+            HttpEntity entity = response.getEntity();
 
-			while ((line = reader.readLine()) != null) {
-				xml += line + "\n";
-			}
-			//log.info(xml);
-			reader.close();
+            if (entity != null) {
+                return EntityUtils.toString(entity);
+            }
 
-		} catch (MalformedURLException e) {
-			// ...
-			log.info(e.getMessage());
-		} catch (IOException e) {
-			// ...
-			log.info(e.getMessage());
-		}
-		return xml;
-	}
+        } catch (ClientProtocolException e) {
+            LOG.error("ClientProtocolException", e);
+        } catch (IOException e) {
+            LOG.error("IOException", e);
+        }
+        LOG.error("Problem while executing request");
+        return "";
+    }
+
+    private void addGzipRequestInterceptor(final DefaultHttpClient httpclient) {
+        httpclient.addRequestInterceptor(new HttpRequestInterceptor() {
+            @Override
+            public void process(final HttpRequest request,
+                                final HttpContext context) throws HttpException, IOException {
+                if (!request.containsHeader("Accept-Encoding")) {
+                    request.addHeader("Accept-Encoding", "gzip");
+                }
+            }
+        });
+    }
+
+    private void addGzipResponseInterceptor(final DefaultHttpClient httpclient) {
+        httpclient.addResponseInterceptor(new HttpResponseInterceptor() {
+            @Override
+            public void process(final HttpResponse response,
+                                final HttpContext context) throws HttpException, IOException {
+                HttpEntity entity = response.getEntity();
+                Header ceheader = entity.getContentEncoding();
+                if (ceheader != null) {
+                    for (HeaderElement codec : ceheader.getElements()) {
+                        if (codec.getName().equalsIgnoreCase("gzip")) {
+                            response.setEntity(new GzipDecompressingEntity(response.getEntity()));
+                            return;
+                        }
+                    }
+                }
+            }
+        });
+    }
 
 }
