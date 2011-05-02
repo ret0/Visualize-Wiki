@@ -72,7 +72,6 @@ public class GetUsertalkNetwork {
 		try {
 			to = URLEncoder.encode(to,"UTF-8");
 			from = URLEncoder.encode(from,"UTF-8");
-			//String urlStr = "http://en.wikipedia.org/w/api.php";
 			String urlStr = "http://" + lang + ".wikipedia.org/w/api.php?format=xml&action=query&prop=revisions&titles=User_talk:" + to + "&rvlimit=500&rvprop=flags%7Ctimestamp%7Cuser&rvuser=" + from + rvstartid;
 			//log.info(urlStr);
 			URL url = new URL(urlStr);

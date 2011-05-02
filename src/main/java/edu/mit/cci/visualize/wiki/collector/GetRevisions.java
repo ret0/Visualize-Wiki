@@ -13,9 +13,8 @@ import java.util.logging.Logger;
 public class GetRevisions {
 	private static final Logger log = Logger.getLogger(GetRevisions.class.getName());
 
-	public String getArticleRevisions(final String lang, String title, final String _limit) {
+	public String getArticleRevisions(final String lang, String title, final int limit) {
 		String data = "";
-		int limit = Integer.parseInt(_limit);
 		Result result = new Result();
 
 		try {
@@ -38,7 +37,6 @@ public class GetRevisions {
 				xml = getArticleRevisionsXML(lang, title, nextId);
 				parse = new XMLParseRevision(title,result,xml);
 				parse.parse();
-				//Thread.sleep(1000);
 			}
 			data += result.getResult();
 		}catch(Exception e) {
