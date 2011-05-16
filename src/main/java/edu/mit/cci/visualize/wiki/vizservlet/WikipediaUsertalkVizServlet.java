@@ -11,7 +11,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import edu.mit.cci.visualize.wiki.collector.GetRevisions;
 import edu.mit.cci.visualize.wiki.collector.GetUsertalkNetwork;
-import edu.mit.cci.visualize.wiki.collector.Revision;
 import edu.mit.cci.visualize.wiki.collector.Revisions;
 import edu.mit.cci.visualize.wiki.util.MapSorter;
 import edu.mit.cci.visualize.wiki.util.Processing;
@@ -33,8 +32,7 @@ public class WikipediaUsertalkVizServlet {
             ParseException {
         long currentTimeMillis = System.currentTimeMillis();
         String responseStr = "";
-        String pageTitle = readStringParameter("name", ""); // WikiPedia article
-                                                            // title
+        String pageTitle = readStringParameter("name", ""); // WikiPedia article title
 
         if (pageTitle.isEmpty()) {
             String errorResp = "";
@@ -50,10 +48,10 @@ public class WikipediaUsertalkVizServlet {
         // Language
         String lang = readStringParameter("lang", "en");
 
-        String data = downloadData(pageTitle, lang);
+        Revisions revisionData = new GetRevisions().getArticleRevisions(lang, pageTitle);
 
         // Sort data, with second parameter: getting Top N editors
-        List<String> editRanking = new MapSorter().sortMap(data, Integer.parseInt(nodeLimit));
+        List<String> editRanking = new MapSorter().generateTopAuthorRanking(revisionData, Integer.parseInt(nodeLimit));
 
         String nodes = "";
         for (int i = 0; i < editRanking.size(); i++) {
@@ -71,7 +69,7 @@ public class WikipediaUsertalkVizServlet {
     private String prepareProcessingCode(final String canvasSize,
                                          final String lang,
                                          final String nodes) {
-        String edges = GetUsertalkNetwork.getNetwork(lang, nodes);
+        String edges = new GetUsertalkNetwork().getNetwork(lang, nodes);
         if (edges.length() > 0) {
             LOG.info(nodes);
             LOG.info(edges);
@@ -119,18 +117,6 @@ public class WikipediaUsertalkVizServlet {
         tableContents += "</table>" + EOL;
         tableContents += "<p id =\"map\"></p>" + EOL;
         return tableContents;
-    }
-
-    private String downloadData(final String pageTitle,
-                                final String lang) throws ParseException {
-        GetRevisions gr = new GetRevisions();
-        String data = "";
-        Revisions download = gr.getArticleRevisions(lang, pageTitle);
-        LOG.info("Downloaded XML: " + download);
-        for (Revision element : download.getRevisions()) {
-            data += download.getArticleName() + "\t" + element.getUserID() + "\t" + element.getTimestamp() + "\t0\t" + element.getEditSize() + "\n";
-        }
-        return data;
     }
 
     private String readStringParameter(final String paramName,
