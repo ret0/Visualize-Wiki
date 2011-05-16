@@ -12,9 +12,9 @@ import java.util.logging.Logger;
 
 public class GetUsertalkNetwork {
 
-	private static final Logger log = Logger.getLogger(GetUsertalkNetwork.class.getName());
+	private static final Logger LOG = Logger.getLogger(GetUsertalkNetwork.class.getName());
 
-	public static String getNetwork(final String lang, final String nodes) {
+	public String getNetwork(final String lang, final String nodes) {
 		String data = "";
 
 		Result result = new Result();
@@ -33,8 +33,8 @@ public class GetUsertalkNetwork {
 
 					String xml = getUserTalkContribs(lang, to, from, "");
 					if (xml.indexOf("<revisions>") > 0) {
-						log.info(xml);
-						XMLParseUserTalk parse = new XMLParseUserTalk(to,result,xml);
+						LOG.info(xml);
+						XMLParseUserTalk parse = new XMLParseUserTalk(to, result, xml);
 						parse.parse();
 					}
 					String out = result.getResult();
@@ -63,7 +63,7 @@ public class GetUsertalkNetwork {
 		return data;
 	}
 
-	private static String getUserTalkContribs(final String lang, String to, String from, final String nextId) {
+	private String getUserTalkContribs(final String lang, String to, String from, final String nextId) {
 		String rvstartid = "&rvstartid=" + nextId;
 		if (nextId.equals("")) {
 			rvstartid = "";
@@ -95,10 +95,10 @@ public class GetUsertalkNetwork {
 
 		} catch (MalformedURLException e) {
 			// ...
-			log.info(e.getMessage());
+			LOG.info(e.getMessage());
 		} catch (IOException e) {
 			// ...
-			log.info(e.getMessage());
+			LOG.info(e.getMessage());
 		}
 		return xml;
 	}
