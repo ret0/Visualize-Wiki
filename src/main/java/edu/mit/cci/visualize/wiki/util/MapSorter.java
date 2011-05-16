@@ -4,69 +4,69 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Hashtable;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
+
+import com.google.common.collect.Lists;
+
+import edu.mit.cci.visualize.wiki.collector.Revision;
+import edu.mit.cci.visualize.wiki.collector.Revisions;
 
 public class MapSorter {
 
-	public List<String> sortMap(final String data, int rank) {
-		//log.info(data);
-		List<String> output = new LinkedList<String>();
-		Hashtable<String,Integer> table = new Hashtable<String,Integer>();
-		Hashtable<String,Integer> editSizeTable = new Hashtable<String,Integer>();
-		int prevSize  = 0;
-		String[] lines = data.split("\n");
-		for (String line : lines) {
-			//log.info(i + "\t" + lines[i].split("\t").length + "\t" + lines[i]);
-			String[] arr = line.split("\t");
-			if (arr.length < 1) {
-				continue;
-			}
-			String user = arr[1];
-			int size = Integer.parseInt(arr[4]);
-			int diff = size - prevSize;
+	public List<String> sortMap(final Revisions revisionData, int maxNodes) {
+
+		Hashtable<String, Integer> numberOfArticleEditsPerUser = new Hashtable<String, Integer>();
+		Hashtable<String, Integer> editSizeTable = new Hashtable<String, Integer>();
+
+		int previousArticleSize  = 0;
+
+		for (Revision rev : revisionData.getRevisions()) {
+			String user = rev.getUserID();
+			int size = rev.getEditSize();
+			int diff = size - previousArticleSize;
+
 			if (editSizeTable.containsKey(user)) {
 				int v = editSizeTable.get(user);
 				v += diff;
-				editSizeTable.put(user,v);
+				editSizeTable.put(user, v);
 			} else {
-				editSizeTable.put(user,diff);
+				editSizeTable.put(user, diff);
 			}
-			prevSize = size;
-			if (table.containsKey(user)) {
-				int v = table.get(user);
+			previousArticleSize = size;
+
+			if (numberOfArticleEditsPerUser.containsKey(user)) {
+				int v = numberOfArticleEditsPerUser.get(user);
 				v++;
-				table.put(user, v);
+				numberOfArticleEditsPerUser.put(user, v);
 			} else {
-				table.put(user, 1);
+				numberOfArticleEditsPerUser.put(user, 1);
 			}
 		}
 
 		// Sort by edit count
-		ArrayList al = new ArrayList(table.entrySet());
-
-		Collections.sort(al, new Comparator(){
-			@Override
-			public int compare(final Object obj1, final Object obj2){
-				Map.Entry ent1 =(Map.Entry)obj1;
-				Map.Entry ent2 =(Map.Entry)obj2;
-				return -((Integer.parseInt(ent1.getValue().toString())) - (Integer.parseInt(ent2.getValue().toString())));
-			}
+		ArrayList<Entry<String, Integer>> al = Lists.newArrayList(numberOfArticleEditsPerUser.entrySet());
+		Collections.sort(al, new Comparator<Entry<String, Integer>>(){
+            @Override
+            public int compare(final Entry<String, Integer> o1, final Entry<String, Integer> o2) {
+                return -(o1.getValue() - o2.getValue());
+            }
 		});
+
 		int alsize = al.size();
-		if (alsize < rank) {
-			rank = alsize;
-		} else if (rank == 0) {
-			rank = alsize;
+		if (alsize < maxNodes) {
+			maxNodes = alsize;
+		} else if (maxNodes == 0) {
+			maxNodes = alsize;
 		}
-		for (int j = 0; j < rank; j++) {
+
+		List<String> output = Lists.newArrayList();
+		for (int j = 0; j < maxNodes; j++) {
 			String str = al.get(j).toString();
 			String user = str.substring(0,str.lastIndexOf("="));
 			String edits = str.substring(str.lastIndexOf("=")+1);
 			String editSize = String.valueOf(editSizeTable.get(user));
 			output.add(edits + "\t" + user + "\t" + editSize);
-			//log.info(edits + "\t" + user + "\t" + editSize);
 		}
 		return output;
 	}
