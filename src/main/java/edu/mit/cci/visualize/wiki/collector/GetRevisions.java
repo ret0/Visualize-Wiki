@@ -17,6 +17,8 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.GzipDecompressingEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -37,33 +39,39 @@ public class GetRevisions {
         Revisions revisionsResult = new Revisions(articleName);
 
         DefaultHttpClient httpclient = new DefaultHttpClient();
+        setHTTPClientTimeouts(httpclient);
         addGzipRequestInterceptor(httpclient);
         addGzipResponseInterceptor(httpclient);
 
         try {
-            String xml = getArticleRevisionsXML(lang, title, "", httpclient);
-
-            Api revisionFromXML = XMLTransformer.getRevisionFromXML(xml);
-            for (Revision rev : revisionFromXML.getAllRevisionsForRequest()) {
-                revisionsResult.addEditEntry(rev);
-            }
-
-            while (!revisionFromXML.isLastPageInRequestSeries()) {
-                xml = getArticleRevisionsXML(lang, title, revisionFromXML.getQueryContinueID(),
-                        httpclient);
+            String queryContinueID = "";
+            Api revisionFromXML = null;
+            while(true) {
+                final String xml = getArticleRevisionsXML(lang, title, queryContinueID, httpclient);
                 revisionFromXML = XMLTransformer.getRevisionFromXML(xml);
                 for (Revision rev : revisionFromXML.getAllRevisionsForRequest()) {
                     revisionsResult.addEditEntry(rev);
                 }
+                if (revisionFromXML.isLastPageInRequestSeries()) {
+                    break;
+                } else {
+                    queryContinueID = revisionFromXML.getQueryContinueID();
+                }
             }
-
         } catch (Exception e) {
            LOG.error("Error while executing HTTP request", e);
         } finally {
             httpclient.getConnectionManager().shutdown();
         }
-
         return revisionsResult;
+    }
+
+    private void setHTTPClientTimeouts(DefaultHttpClient httpclient) {
+        HttpParams httpParams = httpclient.getParams();
+        int connectionTimeoutMillis = 6000;
+        int socketTimeoutMillis = 6000;
+        HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
+        HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
     }
 
     private String getArticleRevisionsXML(final String lang,
