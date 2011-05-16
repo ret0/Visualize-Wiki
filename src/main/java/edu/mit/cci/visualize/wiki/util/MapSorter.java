@@ -14,7 +14,10 @@ import edu.mit.cci.visualize.wiki.collector.Revisions;
 
 public class MapSorter {
 
-	public List<String> sortMap(final Revisions revisionData, int maxNodes) {
+    /**
+     * Generate Ranking for top (maxNodes) authors (most edits)
+     */
+	public List<String> generateTopAuthorRanking(final Revisions revisionData, int maxNodes) {
 
 		Hashtable<String, Integer> numberOfArticleEditsPerUser = new Hashtable<String, Integer>();
 		Hashtable<String, Integer> editSizeTable = new Hashtable<String, Integer>();
@@ -22,53 +25,59 @@ public class MapSorter {
 		int previousArticleSize  = 0;
 
 		for (Revision rev : revisionData.getRevisions()) {
-			String user = rev.getUserID();
-			int size = rev.getEditSize();
-			int diff = size - previousArticleSize;
-
-			if (editSizeTable.containsKey(user)) {
-				int v = editSizeTable.get(user);
-				v += diff;
-				editSizeTable.put(user, v);
-			} else {
-				editSizeTable.put(user, diff);
-			}
-			previousArticleSize = size;
-
-			if (numberOfArticleEditsPerUser.containsKey(user)) {
-				int v = numberOfArticleEditsPerUser.get(user);
-				v++;
-				numberOfArticleEditsPerUser.put(user, v);
-			} else {
-				numberOfArticleEditsPerUser.put(user, 1);
-			}
+			String userID = rev.getUserID();
+			previousArticleSize = storeEditSizes(editSizeTable, previousArticleSize, rev, userID);
+			storeNumberOfEdits(numberOfArticleEditsPerUser, userID);
 		}
 
 		// Sort by edit count
-		ArrayList<Entry<String, Integer>> al = Lists.newArrayList(numberOfArticleEditsPerUser.entrySet());
-		Collections.sort(al, new Comparator<Entry<String, Integer>>(){
+		ArrayList<Entry<String, Integer>> topUsers = Lists.newArrayList(numberOfArticleEditsPerUser.entrySet());
+		Collections.sort(topUsers, new Comparator<Entry<String, Integer>>(){
             @Override
             public int compare(final Entry<String, Integer> o1, final Entry<String, Integer> o2) {
                 return -(o1.getValue() - o2.getValue());
             }
 		});
 
-		int alsize = al.size();
-		if (alsize < maxNodes) {
-			maxNodes = alsize;
-		} else if (maxNodes == 0) {
-			maxNodes = alsize;
+		if (topUsers.size() < maxNodes || maxNodes == 0) {
+			maxNodes = topUsers.size();
 		}
 
 		List<String> output = Lists.newArrayList();
 		for (int j = 0; j < maxNodes; j++) {
-			String str = al.get(j).toString();
-			String user = str.substring(0,str.lastIndexOf("="));
-			String edits = str.substring(str.lastIndexOf("=")+1);
-			String editSize = String.valueOf(editSizeTable.get(user));
-			output.add(edits + "\t" + user + "\t" + editSize);
+			Entry<String, Integer> entry = topUsers.get(j);
+			String userID = entry.getKey();
+			Integer nbrEdits = entry.getValue();
+			Integer editSize = editSizeTable.get(userID);
+			output.add(nbrEdits + "\t" + userID + "\t" + editSize);
 		}
 		return output;
 	}
+
+    private void storeNumberOfEdits(final Hashtable<String, Integer> numberOfArticleEditsPerUser,
+                                    final String userID) {
+        if (numberOfArticleEditsPerUser.containsKey(userID)) {
+        	numberOfArticleEditsPerUser.put(userID, numberOfArticleEditsPerUser.get(userID) + 1);
+        } else {
+        	numberOfArticleEditsPerUser.put(userID, 1);
+        }
+    }
+
+    private int storeEditSizes(final Hashtable<String, Integer> editSizeTable,
+                               final int previousArticleSize,
+                               final Revision rev,
+                               final String userID) {
+        int size = rev.getEditSize();
+        int sizeDifference = size - previousArticleSize;
+
+        if (editSizeTable.containsKey(userID)) {
+        	int v = editSizeTable.get(userID);
+        	v += sizeDifference;
+        	editSizeTable.put(userID, v);
+        } else {
+        	editSizeTable.put(userID, sizeDifference);
+        }
+        return size;
+    }
 
 }
