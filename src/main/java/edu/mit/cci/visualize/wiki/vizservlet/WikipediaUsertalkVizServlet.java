@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import edu.mit.cci.visualize.wiki.collector.GetRevisions;
 import edu.mit.cci.visualize.wiki.collector.GetUsertalkNetwork;
+import edu.mit.cci.visualize.wiki.collector.Revision;
+import edu.mit.cci.visualize.wiki.collector.Revisions;
 import edu.mit.cci.visualize.wiki.util.MapSorter;
 import edu.mit.cci.visualize.wiki.util.Processing;
 
@@ -41,10 +43,6 @@ public class WikipediaUsertalkVizServlet {
             return errorResp;
         }
 
-        // # of edits (limit x 500 edits)
-        String limit = readStringParameter("limit", "1"); // default: last 500
-                                                          // edits
-
         // # of nodes
         String nodeLimit = readStringParameter("nodeLimit", "10");
         String canvasSize = readStringParameter("size", "300");
@@ -52,7 +50,7 @@ public class WikipediaUsertalkVizServlet {
         // Language
         String lang = readStringParameter("lang", "en");
 
-        String data = downloadData(pageTitle, Integer.parseInt(limit), lang);
+        String data = downloadData(pageTitle, lang);
 
         // Sort data, with second parameter: getting Top N editors
         List<String> editRanking = new MapSorter().sortMap(data, Integer.parseInt(nodeLimit));
@@ -60,8 +58,7 @@ public class WikipediaUsertalkVizServlet {
         String nodes = "";
         for (int i = 0; i < editRanking.size(); i++) {
             // Name \t # of edits \t # of edit articles
-            nodes += editRanking.get(i).split("\t")[1] + "\t" + editRanking.get(i).split("\t")[0]
-                    + "\t1\n";
+            nodes += editRanking.get(i).split("\t")[1] + "\t" + editRanking.get(i).split("\t")[0] + "\t1\n";
         }
 
         responseStr += writeProcessingCode(canvasSize, lang, nodes);
@@ -125,19 +122,13 @@ public class WikipediaUsertalkVizServlet {
     }
 
     private String downloadData(final String pageTitle,
-                                final int limit,
                                 final String lang) throws ParseException {
         GetRevisions gr = new GetRevisions();
         String data = "";
-        String download = gr.getArticleRevisions(lang, pageTitle, limit);
+        Revisions download = gr.getArticleRevisions(lang, pageTitle);
         LOG.info("Downloaded XML: " + download);
-        String[] line = download.split("\n");
-        for (String element : line) {
-            String[] arr = element.split("\t");
-            String timestamp = arr[2];
-            timestamp = timestamp.replaceAll("T", " ");
-            timestamp = timestamp.replaceAll("Z", "");
-            data += arr[0] + "\t" + arr[1] + "\t" + timestamp + "\t0\t" + arr[4] + "\n";
+        for (Revision element : download.getRevisions()) {
+            data += download.getArticleName() + "\t" + element.getUserID() + "\t" + element.getTimestamp() + "\t0\t" + element.getEditSize() + "\n";
         }
         return data;
     }
