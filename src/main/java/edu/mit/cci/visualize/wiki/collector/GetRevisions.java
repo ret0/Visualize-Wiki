@@ -23,60 +23,63 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.mit.cci.visualize.wiki.util.Const;
+import edu.mit.cci.visualize.wiki.xml.Api;
+import edu.mit.cci.visualize.wiki.xml.XMLTransformer;
 
 public class GetRevisions {
 
     private final static Logger LOG = LoggerFactory.getLogger(GetRevisions.class.getName());
 
-    public String getArticleRevisions(final String lang,
-                                      String title,
-                                      final int limit) {
-        String data = "";
-        Result result = new Result();
+    public Revisions getArticleRevisions(final String lang,
+                                         final String title) {
+
+        final String articleName = title.replaceAll(" ", "_");
+        Revisions revisionsResult = new Revisions(articleName);
 
         DefaultHttpClient httpclient = new DefaultHttpClient();
         addGzipRequestInterceptor(httpclient);
         addGzipResponseInterceptor(httpclient);
 
-        title = title.replaceAll(" ", "_");
-
         try {
             String xml = getArticleRevisionsXML(lang, title, "", httpclient);
-            XMLParseRevision parse = new XMLParseRevision(title, result, xml);
-            parse.parse();
-            int count = 0;
-            while (result.hasNextId()) {
-                count++;
-                if (limit != 0 && count >= limit) {
-                    break;
-                }
-                String nextId = result.getNextId();
-                data += result.getResult();
-                result.clear();
-                xml = getArticleRevisionsXML(lang, title, nextId, httpclient);
-                parse = new XMLParseRevision(title, result, xml);
-                parse.parse();
+
+            Api revisionFromXML = XMLTransformer.getRevisionFromXML(xml);
+            for (Revision rev : revisionFromXML.getAllRevisionsForRequest()) {
+                revisionsResult.addEditEntry(rev);
             }
-            data += result.getResult();
+
+            while (!revisionFromXML.isLastPageInRequestSeries()) {
+                xml = getArticleRevisionsXML(lang, title, revisionFromXML.getQueryContinueID(),
+                        httpclient);
+                revisionFromXML = XMLTransformer.getRevisionFromXML(xml);
+                for (Revision rev : revisionFromXML.getAllRevisionsForRequest()) {
+                    revisionsResult.addEditEntry(rev);
+                }
+            }
+
         } catch (Exception e) {
-            e.printStackTrace();
+           LOG.error("Error while executing HTTP request", e);
         } finally {
             httpclient.getConnectionManager().shutdown();
         }
-        return data;
+
+        return revisionsResult;
     }
 
     private String getArticleRevisionsXML(final String lang,
                                           String pageid,
                                           final String nextId,
-                                          final HttpClient httpclient)
-            throws UnsupportedEncodingException {
+                                          final HttpClient httpclient) {
         String rvstartid = "&rvstartid=" + nextId;
         if (nextId.equals("")) {
             rvstartid = "";
         }
 
-        pageid = URLEncoder.encode(pageid, Const.ENCODING);
+        try {
+            pageid = URLEncoder.encode(pageid, Const.ENCODING);
+        } catch (UnsupportedEncodingException e) {
+            LOG.error("Encoding failed!");
+        }
 
         String urlStr = "http://" + lang
                 + ".wikipedia.org/w/api.php?format=xml&action=query&prop=revisions&titles=" + pageid
