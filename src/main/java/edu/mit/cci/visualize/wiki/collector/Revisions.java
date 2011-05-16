@@ -23,7 +23,10 @@ public class Revisions {
     }
 
     public void addEditEntry(final Revision rev) {
-        edits.add(rev);
+        // ignore anonymous edits
+        if(rev.getUserID() != null) {
+            edits.add(rev);
+        }
     }
 
     public int getNumberOfRevisions() {
