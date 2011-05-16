@@ -1,14 +1,25 @@
+import org.junit.Assert;
 import org.junit.Test;
 
 import edu.mit.cci.visualize.wiki.collector.GetRevisions;
+import edu.mit.cci.visualize.wiki.collector.Revisions;
 
 
 public class TestGetRevisions {
 
     @Test
-    public void testGetArticleRevisions() {
+    public void testGetArticleRevisions() throws Exception {
         GetRevisions rev = new GetRevisions();
-        String articleRevisions = rev.getArticleRevisions("en", "Tree", 500);
-        //System.out.println(articleRevisions);
+        Revisions articleRevisionsTree = rev.getArticleRevisions("en", "Tree");
+        Revisions articleRevisionsHSR = rev.getArticleRevisions("en", "Northeastern_United_States_blizzard_of_1978");
+        Assert.assertEquals(4181, articleRevisionsTree.getNumberOfRevisions());
+        Assert.assertEquals(434, articleRevisionsHSR.getNumberOfRevisions());
+    }
+
+    @Test
+    public void testGetArticleRevisionsLarge() throws Exception {
+        GetRevisions rev = new GetRevisions();
+        Revisions articleRevisionsWikiLeaks = rev.getArticleRevisions("en", "WikiLeaks");
+        Assert.assertEquals(3670, articleRevisionsWikiLeaks.getNumberOfRevisions());
     }
 }
