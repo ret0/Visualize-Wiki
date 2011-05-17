@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 public class WikiAPIClient {
 
-    private static final int HTTP_TIMEOUT = 6000;
+    private static final int HTTP_TIMEOUT = 8000;
     private static final Logger LOG = LoggerFactory.getLogger(WikiAPIClient.class.getName());
 
     private final DefaultHttpClient httpclient;
@@ -58,11 +58,10 @@ public class WikiAPIClient {
             if (entity != null) {
                 return EntityUtils.toString(entity);
             }
-
-        } catch (ClientProtocolException e) {
-            LOG.error("ClientProtocolException", e);
         } catch (SocketTimeoutException e) {
             LOG.error("Timeout!", e);
+        } catch (ClientProtocolException e) {
+            LOG.error("ClientProtocolException", e);
         } catch (IOException e) {
             LOG.error("IOException", e);
         }
