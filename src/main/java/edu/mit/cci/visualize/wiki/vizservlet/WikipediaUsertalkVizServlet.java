@@ -72,7 +72,7 @@ public class WikipediaUsertalkVizServlet {
         if (edges.size() > 0) {
             LOG.info(nodes.toString());
             LOG.info(edges.toString());
-            String path = context.getRealPath("/skelton/skelton_spring.js");
+            String path = context.getRealPath("/skeleton/skelton_spring.js");
             return new Processing().processingCode(nodes, edges, path, canvasSize);
         }
         return "";

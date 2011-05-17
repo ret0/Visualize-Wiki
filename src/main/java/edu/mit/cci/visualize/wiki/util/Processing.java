@@ -17,7 +17,6 @@ public class Processing {
 		String eol = "\n";
 		String firstName = "";
 		String nodeCode = "";
-		//String[] nodeArr = nodes.split("\n");
 		for (ArticleContributions node : nodes) {
 			//engine.addParticle(new Particle("Remco", random(0, canvasSize), random(0, canvasSize), 30, 0, 0, 0x80FF0000));
 			String name = node.getUserID();

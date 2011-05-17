@@ -70,7 +70,7 @@ public class PageRevisionFetcher {
         String urlStr = "http://" + lang
                 + ".wikipedia.org/w/api.php?format=xml&action=query&prop=revisions&titles=" + pageid
                 + "&rvlimit=500&rvprop=flags%7Ctimestamp%7Cuser%7Csize&rvdir=older" + rvstartid;
-        LOG.info("Requesting URL: " + urlStr);
+        LOG.debug("Requesting URL: " + urlStr);
         return wikiAPIClient.executeHTTPRequest(urlStr);
     }
 
