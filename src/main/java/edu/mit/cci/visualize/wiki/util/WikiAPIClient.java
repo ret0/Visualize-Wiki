@@ -47,7 +47,6 @@ public class WikiAPIClient {
 
 
     public String executeHTTPRequest(final String url) {
-
         try {
             HttpGet httpget = new HttpGet(url);
             httpget.setHeader("User-Agent", Const.USER_AGENT);
