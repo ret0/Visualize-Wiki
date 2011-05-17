@@ -1,3 +1,4 @@
+package verification;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -20,6 +21,6 @@ public class TestGetRevisions {
     public void testGetArticleRevisionsLarge() throws Exception {
         GetRevisions rev = new GetRevisions();
         Revisions articleRevisionsWikiLeaks = rev.getArticleRevisions("en", "WikiLeaks");
-        Assert.assertEquals(3673, articleRevisionsWikiLeaks.getNumberOfRevisions());
+        Assert.assertEquals(3675, articleRevisionsWikiLeaks.getNumberOfRevisions());
     }
 }

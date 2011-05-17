@@ -1,3 +1,4 @@
+package verification;
 import java.util.List;
 
 import junit.framework.Assert;
@@ -6,6 +7,7 @@ import org.junit.Test;
 
 import com.google.common.collect.Lists;
 
+import edu.mit.cci.visualize.wiki.collector.ArticleContributions;
 import edu.mit.cci.visualize.wiki.collector.GetRevisions;
 import edu.mit.cci.visualize.wiki.collector.Revisions;
 import edu.mit.cci.visualize.wiki.collector.UsertalkEdge;
@@ -21,19 +23,18 @@ public class TestGetUserTalk {
     public void getUserTalk() {
         Revisions download = new GetRevisions().getArticleRevisions(TEST_LANG, "WikiLeaks");
 
-        List<String> sortMap = new MapSorter().generateTopAuthorRanking(download, MAX_NODES);
-        List<String> expected = Lists.newArrayList(
-                "89\tSmartse\t-7047",
-                "84\tCybercobra\t-7814",
-                "79\tGregcaletta\t38543",
-                "78\tVeritysense\t1742",
-                "68\tSpitzl\t-1128",
-                "57\tAndyTheGrump\t-13505",
-                "50\tFunandtrvl\t-1809",
-                "47\tFelixhonecker\t-6955",
-                "46\tF.F.McGurk\t-10030",
-                "42\tOcaasi\t-10827");
-
+        List<ArticleContributions> sortMap = new MapSorter().generateTopAuthorRanking(download, MAX_NODES);
+        List<ArticleContributions> expected = Lists.newArrayList(
+                new ArticleContributions(89, "Smartse", -7047),
+                new ArticleContributions(84, "Cybercobra", -7814),
+                new ArticleContributions(79, "Gregcaletta", 38543),
+                new ArticleContributions(78, "Veritysense", 1742),
+                new ArticleContributions(68, "Spitzl", -1128),
+                new ArticleContributions(57, "AndyTheGrump", -13505),
+                new ArticleContributions(50, "Funandtrvl", -1809),
+                new ArticleContributions(47, "Felixhonecker", -6955),
+                new ArticleContributions(46, "F.F.McGurk", -10030),
+                new ArticleContributions(42, "Ocaasi", -10827));
         Assert.assertEquals(expected, sortMap);
     }
 
@@ -41,11 +42,11 @@ public class TestGetUserTalk {
     public void getNetworkEdges() {
         Revisions revisionData = new GetRevisions().getArticleRevisions(TEST_LANG, "WikiLeaks");
         // Sort data, with second parameter: getting Top N editors
-        List<String> editRanking = new MapSorter().generateTopAuthorRanking(revisionData, MAX_NODES);
+        List<ArticleContributions> editRanking = new MapSorter().generateTopAuthorRanking(revisionData, MAX_NODES);
 
         List<String> userIDs = Lists.newArrayList();
-        for (String rankingEntry : editRanking) {
-            userIDs.add(rankingEntry.split("\t")[1]);
+        for (ArticleContributions rankingEntry : editRanking) {
+            userIDs.add(rankingEntry.getUserID());
         }
 
         List<UsertalkEdge> edges = new UsertalkNetworkFetcher(TEST_LANG, userIDs).getNetwork();
@@ -58,7 +59,6 @@ public class TestGetUserTalk {
                 new UsertalkEdge("AndyTheGrump", "Ocaasi", 2),
                 new UsertalkEdge("Funandtrvl", "Ocaasi", 2));
         Assert.assertEquals(expected, edges);
-
     }
 
 
