@@ -4,11 +4,12 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.List;
 
+import edu.mit.cci.visualize.wiki.collector.ArticleContributions;
 import edu.mit.cci.visualize.wiki.collector.UsertalkEdge;
 
 public class Processing {
 
-    public String processingCode(final String nodes,
+    public String processingCode(final List<ArticleContributions> nodes,
                                  final List<UsertalkEdge> edges,
                                  final String path,
                                  final String size) {
@@ -16,20 +17,20 @@ public class Processing {
 		String eol = "\n";
 		String firstName = "";
 		String nodeCode = "";
-		String[] nodeArr = nodes.split("\n");
-		for (String node : nodeArr) {
+		//String[] nodeArr = nodes.split("\n");
+		for (ArticleContributions node : nodes) {
 			//engine.addParticle(new Particle("Remco", random(0, canvasSize), random(0, canvasSize), 30, 0, 0, 0x80FF0000));
-			String name = node.split("\t")[0];
+			String name = node.getUserID();
 			firstName = name;
 
 			String[] colors = {"0x800000FF", "0x80FF0000", "0x8000FF00"};
 
-			double nodeSize = Double.parseDouble(node.split("\t")[1]);
-			nodeSize = Math.log10(nodeSize) * 20;
+			double nodeSize = Math.log10(node.getNumberOfChanges()) * 20;
 			if (nodeSize < 10) {
 				nodeSize = 10;
 			}
-			int numOfArticles = Integer.parseInt(node.split("\t")[2]);
+			// TODO hardcoded
+			int numOfArticles = 1;
 			String color = "";
 			if (numOfArticles < 4) {
 				color = colors[numOfArticles-1];

@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 
 import com.google.common.collect.Lists;
 
+import edu.mit.cci.visualize.wiki.collector.ArticleContributions;
 import edu.mit.cci.visualize.wiki.collector.Revision;
 import edu.mit.cci.visualize.wiki.collector.Revisions;
 
@@ -17,7 +18,7 @@ public class MapSorter {
     /**
      * Generate Ranking for top (maxNodes) authors (most edits)
      */
-	public List<String> generateTopAuthorRanking(final Revisions revisionData, int maxNodes) {
+	public List<ArticleContributions> generateTopAuthorRanking(final Revisions revisionData, int maxNodes) {
 
 		Hashtable<String, Integer> numberOfArticleEditsPerUser = new Hashtable<String, Integer>();
 		Hashtable<String, Integer> editSizeTable = new Hashtable<String, Integer>();
@@ -43,13 +44,13 @@ public class MapSorter {
 			maxNodes = topUsers.size();
 		}
 
-		List<String> output = Lists.newArrayList();
+		List<ArticleContributions> output = Lists.newArrayList();
 		for (int j = 0; j < maxNodes; j++) {
 			Entry<String, Integer> entry = topUsers.get(j);
 			String userID = entry.getKey();
 			Integer nbrEdits = entry.getValue();
 			Integer editSize = editSizeTable.get(userID);
-			output.add(nbrEdits + "\t" + userID + "\t" + editSize);
+			output.add(new ArticleContributions(nbrEdits, userID, editSize));
 		}
 		return output;
 	}

@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.google.common.collect.Lists;
 
+import edu.mit.cci.visualize.wiki.collector.ArticleContributions;
 import edu.mit.cci.visualize.wiki.collector.GetRevisions;
 import edu.mit.cci.visualize.wiki.collector.Revisions;
 import edu.mit.cci.visualize.wiki.collector.UsertalkEdge;
@@ -54,15 +55,9 @@ public class WikipediaUsertalkVizServlet {
         Revisions revisionData = new GetRevisions().getArticleRevisions(lang, pageTitle);
 
         // Sort data, with second parameter: getting Top N editors
-        List<String> editRanking = new MapSorter().generateTopAuthorRanking(revisionData, Integer.parseInt(nodeLimit));
+        List<ArticleContributions> editRanking = new MapSorter().generateTopAuthorRanking(revisionData, Integer.parseInt(nodeLimit));
 
-        String nodes = "";
-        for (String rankingEntry : editRanking) {
-            // Name \t # of edits \t # of edit articles
-            nodes += rankingEntry.split("\t")[1] + "\t" + rankingEntry.split("\t")[0] + "\t1\n";
-        }
-
-        responseStr += writeProcessingCode(canvasSize, lang, nodes);
+        responseStr += writeProcessingCode(canvasSize, lang, editRanking);
         responseStr += writeAuthorsTable(editRanking);
         long currentTimeMillisAfterDl = System.currentTimeMillis();
         LOG.info("TIME: " + (currentTimeMillisAfterDl - currentTimeMillis));
@@ -71,11 +66,11 @@ public class WikipediaUsertalkVizServlet {
 
     private String prepareProcessingCode(final String canvasSize,
                                          final String lang,
-                                         final String nodes) {
+                                         final List<ArticleContributions> nodes) {
         List<String> userIDs = prepareUserIDs(nodes);
         List<UsertalkEdge> edges = new UsertalkNetworkFetcher(lang, userIDs).getNetwork();
         if (edges.size() > 0) {
-            LOG.info(nodes);
+            LOG.info(nodes.toString());
             LOG.info(edges.toString());
             String path = context.getRealPath("/skelton/skelton_spring.js");
             return new Processing().processingCode(nodes, edges, path, canvasSize);
@@ -83,41 +78,38 @@ public class WikipediaUsertalkVizServlet {
         return "";
     }
 
-    private List<String> prepareUserIDs(final String nodes) {
+    private List<String> prepareUserIDs(final List<ArticleContributions> nodes) {
         List<String> userIDs = Lists.newArrayList();
-        for (String node : nodes.split("\n")) {
-            userIDs.add(node.split("\t")[0]);
+        for (ArticleContributions node : nodes) {
+            userIDs.add(node.getUserID());
         }
         return userIDs;
     }
 
     private String writeProcessingCode(final String canvasSize,
                                        final String lang,
-                                       final String nodes) {
+                                       final List<ArticleContributions> nodes) {
         String responseStr = "";
         responseStr += "<script id=\"processing-code\" type=\"application/processing\">" + EOL;
         responseStr += prepareProcessingCode(canvasSize, lang, nodes);
         responseStr += "</script>" + EOL;
-        responseStr += "<div><canvas width=\"" + canvasSize + "\" height=\"" + canvasSize
-                + "\"></canvas></div>" + EOL;
+        responseStr += "<div><canvas width=\"" + canvasSize + "\" height=\"" + canvasSize + "\"></canvas></div>" + EOL;
         return responseStr;
     }
 
-    private String writeAuthorsTable(final List<String> editRanking) {
+    private String writeAuthorsTable(final List<ArticleContributions> editRanking) {
         String tableContents = "";
         tableContents += "<table>" + EOL;
         tableContents += "<tbody>" + EOL;
         int sumNum = 0;
         String userName_editSize = "";
         for (int i = 0; i < editRanking.size(); i++) {
-            String[] tmpArray = editRanking.get(i).split("\t");
-
-            String name = tmpArray[1]; // Editor name
-            String num = tmpArray[0]; // # of edits
-            String editSize = tmpArray[2]; // total byte change by this user
+            String name = editRanking.get(i).getUserID(); // Editor name
+            int num = editRanking.get(i).getNumberOfChanges();// # of edits
+            int editSize = editRanking.get(i).getEditSize(); // total byte change by this user
 
             userName_editSize += name + "\t" + editSize + "\n";
-            sumNum += Integer.parseInt(num);
+            sumNum += num;
             tableContents += "<tr>" + EOL;
             tableContents += "<td>" + name + "</td>" + EOL;
             tableContents += "<td>" + num + "</td>" + EOL;
@@ -130,8 +122,7 @@ public class WikipediaUsertalkVizServlet {
         return tableContents;
     }
 
-    private String readStringParameter(final String paramName,
-                                       final String defaultValue) {
+    private String readStringParameter(final String paramName, final String defaultValue) {
         if (request.getParameter(paramName) != null) {
             return request.getParameter(paramName);
         }

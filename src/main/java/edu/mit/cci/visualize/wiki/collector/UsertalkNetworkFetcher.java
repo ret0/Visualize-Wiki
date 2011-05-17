@@ -30,11 +30,9 @@ public class UsertalkNetworkFetcher {
     }
 
     public List<UsertalkEdge> getNetwork() {
-        List<UsertalkEdge> userTalkEdges = Lists.newArrayList();
+        int numberOfUsersInNetwork = sanitizedUserIDs.size();
+        int[][] userTalkMatrix = new int[numberOfUsersInNetwork][numberOfUsersInNetwork];
         try {
-            int numberOfUsersInNetwork = sanitizedUserIDs.size();
-            int[][] userTalkMatrix = new int[numberOfUsersInNetwork][numberOfUsersInNetwork];
-
             for (int i = 0; i < numberOfUsersInNetwork; i++) {
                 for (int j = 0; j < numberOfUsersInNetwork; j++) {
                     if (i == j) {
@@ -43,19 +41,23 @@ public class UsertalkNetworkFetcher {
                     updateMatrixValues(i, j, userTalkMatrix);
                 }
             }
-
-            for (int i = 0; i < userTalkMatrix.length; i++) {
-                for (int j = i + 1; j < userTalkMatrix[i].length; j++) {
-                    int totalConversations = userTalkMatrix[i][j] + userTalkMatrix[j][i]; //sum of talk in both directions
-                    if (totalConversations > 0) {
-                        userTalkEdges.add(new UsertalkEdge(sanitizedUserIDs.get(i), sanitizedUserIDs.get(j), totalConversations));
-                    }
-                }
-            }
         } catch (Exception e) {
             LOG.error("Exception while fetching UserTalk Info", e);
         } finally {
             httpclient.getConnectionManager().shutdown();
+        }
+        return collectUserTalkEdges(userTalkMatrix);
+    }
+
+    private List<UsertalkEdge> collectUserTalkEdges(final int[][] userTalkMatrix) {
+        List<UsertalkEdge> userTalkEdges = Lists.newArrayList();
+        for (int i = 0; i < userTalkMatrix.length; i++) {
+            for (int j = i + 1; j < userTalkMatrix[i].length; j++) {
+                int totalConversations = userTalkMatrix[i][j] + userTalkMatrix[j][i]; //sum of talk in both directions
+                if (totalConversations > 0) {
+                    userTalkEdges.add(new UsertalkEdge(sanitizedUserIDs.get(i), sanitizedUserIDs.get(j), totalConversations));
+                }
+            }
         }
         return userTalkEdges;
     }

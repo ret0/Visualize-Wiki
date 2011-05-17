@@ -55,7 +55,11 @@ public class ArticleContributions {
         return true;
     }
 
-
+    @Override
+    public String toString() {
+        return "ArticleContributions [userID=" + userID + ", numberOfChanges=" + numberOfChanges
+                + ", editSize=" + editSize + "]";
+    }
 
 
 }
