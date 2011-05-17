@@ -7,8 +7,9 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 import edu.mit.cci.visualize.wiki.collector.GetRevisions;
-import edu.mit.cci.visualize.wiki.collector.GetUsertalkNetwork;
 import edu.mit.cci.visualize.wiki.collector.Revisions;
+import edu.mit.cci.visualize.wiki.collector.UsertalkEdge;
+import edu.mit.cci.visualize.wiki.collector.UsertalkNetworkFetcher;
 import edu.mit.cci.visualize.wiki.util.MapSorter;
 
 public class TestGetUserTalk {
@@ -42,14 +43,20 @@ public class TestGetUserTalk {
         // Sort data, with second parameter: getting Top N editors
         List<String> editRanking = new MapSorter().generateTopAuthorRanking(revisionData, MAX_NODES);
 
-        String nodes = "";
+        List<String> userIDs = Lists.newArrayList();
         for (String rankingEntry : editRanking) {
-            // Name \t # of edits \t # of edit articles
-            nodes += rankingEntry.split("\t")[1] + "\t" + rankingEntry.split("\t")[0] + "\t1\n";
+            userIDs.add(rankingEntry.split("\t")[1]);
         }
 
-        String edges = new GetUsertalkNetwork().getNetwork(TEST_LANG, nodes);
-        String expected = "Smartse\tAndyTheGrump\t2\nCybercobra\tAndyTheGrump\t1\nCybercobra\tOcaasi\t1\nGregcaletta\tAndyTheGrump\t9\nSpitzl\tAndyTheGrump\t1\nAndyTheGrump\tOcaasi\t2\nFunandtrvl\tOcaasi\t2\n";
+        List<UsertalkEdge> edges = new UsertalkNetworkFetcher(TEST_LANG, userIDs).getNetwork();
+        List<UsertalkEdge> expected = Lists.newArrayList(
+                new UsertalkEdge("Smartse", "AndyTheGrump", 2),
+                new UsertalkEdge("Cybercobra", "AndyTheGrump", 1),
+                new UsertalkEdge("Cybercobra", "Ocaasi", 1),
+                new UsertalkEdge("Gregcaletta", "AndyTheGrump", 9),
+                new UsertalkEdge("Spitzl", "AndyTheGrump", 1),
+                new UsertalkEdge("AndyTheGrump", "Ocaasi", 2),
+                new UsertalkEdge("Funandtrvl", "Ocaasi", 2));
         Assert.assertEquals(expected, edges);
 
     }

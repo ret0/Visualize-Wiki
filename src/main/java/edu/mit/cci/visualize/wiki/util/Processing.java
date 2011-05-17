@@ -2,17 +2,22 @@ package edu.mit.cci.visualize.wiki.util;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.util.List;
+
+import edu.mit.cci.visualize.wiki.collector.UsertalkEdge;
 
 public class Processing {
 
-	public String processingCode(final String nodes,final String edges, final String path, final String size) {
-
+    public String processingCode(final String nodes,
+                                 final List<UsertalkEdge> edges,
+                                 final String path,
+                                 final String size) {
 		String code = "";
 		String eol = "\n";
 		String firstName = "";
 		String nodeCode = "";
 		String[] nodeArr = nodes.split("\n");
-		for (String node:nodeArr) {
+		for (String node : nodeArr) {
 			//engine.addParticle(new Particle("Remco", random(0, canvasSize), random(0, canvasSize), 30, 0, 0, 0x80FF0000));
 			String name = node.split("\t")[0];
 			firstName = name;
@@ -36,12 +41,12 @@ public class Processing {
 		}
 
 		String edgeCode = "";
-		String[] edgeArr = edges.split("\n");
-		for (String edge:edgeArr) {
+		//String[] edgeArr = edges.split("\n");
+		for (UsertalkEdge edge : edges) {
 			//engine.connectParticles("Remco", "Joris", 2);
-			String name1 = edge.split("\t")[0];
-			String name2 = edge.split("\t")[1];
-			double thick = Double.parseDouble(edge.split("\t")[2]);
+			String name1 = edge.getFrom();
+			String name2 = edge.getTo();
+			double thick = edge.getNbrOfConversations();
 			thick = Math.log10(thick) * 2;
 			edgeCode += "engine.connectParticles(\"" + name1 + "\", \"" + name2 + "\", " + thick + ");" + eol;
 

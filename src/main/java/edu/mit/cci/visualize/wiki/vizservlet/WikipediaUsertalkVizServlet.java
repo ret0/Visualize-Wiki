@@ -9,9 +9,12 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
+import com.google.common.collect.Lists;
+
 import edu.mit.cci.visualize.wiki.collector.GetRevisions;
-import edu.mit.cci.visualize.wiki.collector.GetUsertalkNetwork;
 import edu.mit.cci.visualize.wiki.collector.Revisions;
+import edu.mit.cci.visualize.wiki.collector.UsertalkEdge;
+import edu.mit.cci.visualize.wiki.collector.UsertalkNetworkFetcher;
 import edu.mit.cci.visualize.wiki.util.MapSorter;
 import edu.mit.cci.visualize.wiki.util.Processing;
 
@@ -69,15 +72,23 @@ public class WikipediaUsertalkVizServlet {
     private String prepareProcessingCode(final String canvasSize,
                                          final String lang,
                                          final String nodes) {
-        String edges = new GetUsertalkNetwork().getNetwork(lang, nodes);
-        if (edges.length() > 0) {
+        List<String> userIDs = prepareUserIDs(nodes);
+        List<UsertalkEdge> edges = new UsertalkNetworkFetcher(lang, userIDs).getNetwork();
+        if (edges.size() > 0) {
             LOG.info(nodes);
-            LOG.info(edges);
-            Processing pro = new Processing();
+            LOG.info(edges.toString());
             String path = context.getRealPath("/skelton/skelton_spring.js");
-            return pro.processingCode(nodes, edges, path, canvasSize);
+            return new Processing().processingCode(nodes, edges, path, canvasSize);
         }
         return "";
+    }
+
+    private List<String> prepareUserIDs(final String nodes) {
+        List<String> userIDs = Lists.newArrayList();
+        for (String node : nodes.split("\n")) {
+            userIDs.add(node.split("\t")[0]);
+        }
+        return userIDs;
     }
 
     private String writeProcessingCode(final String canvasSize,
