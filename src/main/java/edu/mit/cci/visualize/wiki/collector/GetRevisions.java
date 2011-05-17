@@ -1,30 +1,14 @@
 package edu.mit.cci.visualize.wiki.collector;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.GzipDecompressingEntity;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.mit.cci.visualize.wiki.util.Const;
+import edu.mit.cci.visualize.wiki.util.WikiAPIClient;
 import edu.mit.cci.visualize.wiki.xml.Api;
 import edu.mit.cci.visualize.wiki.xml.XMLTransformer;
 
@@ -37,17 +21,14 @@ public class GetRevisions {
 
         final String articleName = title.replaceAll(" ", "_");
         Revisions revisionsResult = new Revisions(articleName);
-
         DefaultHttpClient httpclient = new DefaultHttpClient();
-        setHTTPClientTimeouts(httpclient);
-        addGzipRequestInterceptor(httpclient);
-        addGzipResponseInterceptor(httpclient);
+        WikiAPIClient wikiAPIClient = new WikiAPIClient(httpclient);
 
         try {
             String queryContinueID = "";
             Api revisionFromXML = null;
             while(true) {
-                final String xml = getArticleRevisionsXML(lang, title, queryContinueID, httpclient);
+                final String xml = getArticleRevisionsXML(lang, title, queryContinueID, wikiAPIClient);
                 revisionFromXML = XMLTransformer.getRevisionFromXML(xml);
                 for (Revision rev : revisionFromXML.getAllRevisionsForRequest()) {
                     revisionsResult.addEditEntry(rev);
@@ -66,18 +47,10 @@ public class GetRevisions {
         return revisionsResult;
     }
 
-    private void setHTTPClientTimeouts(DefaultHttpClient httpclient) {
-        HttpParams httpParams = httpclient.getParams();
-        int connectionTimeoutMillis = 6000;
-        int socketTimeoutMillis = 6000;
-        HttpConnectionParams.setConnectionTimeout(httpParams, connectionTimeoutMillis);
-        HttpConnectionParams.setSoTimeout(httpParams, socketTimeoutMillis);
-    }
-
     private String getArticleRevisionsXML(final String lang,
                                           String pageid,
                                           final String nextId,
-                                          final HttpClient httpclient) {
+                                          final WikiAPIClient wikiAPIClient) {
         String rvstartid = "&rvstartid=" + nextId;
         if (nextId.equals("")) {
             rvstartid = "";
@@ -93,60 +66,7 @@ public class GetRevisions {
                 + ".wikipedia.org/w/api.php?format=xml&action=query&prop=revisions&titles=" + pageid
                 + "&rvlimit=500&rvprop=flags%7Ctimestamp%7Cuser%7Csize&rvdir=older" + rvstartid;
         LOG.info("Requesting URL: " + urlStr);
-        return executeHTTPRequest(urlStr, httpclient);
-    }
-
-    private String executeHTTPRequest(final String url,
-                                      final HttpClient httpclient) {
-        try {
-            HttpGet httpget = new HttpGet(url);
-            httpget.setHeader("User-Agent", Const.USER_AGENT);
-            LOG.debug("executing request " + httpget.getURI());
-            HttpResponse response = httpclient.execute(httpget);
-            HttpEntity entity = response.getEntity();
-
-            if (entity != null) {
-                return EntityUtils.toString(entity);
-            }
-
-        } catch (ClientProtocolException e) {
-            LOG.error("ClientProtocolException", e);
-        } catch (IOException e) {
-            LOG.error("IOException", e);
-        }
-        LOG.error("Problem while executing request");
-        return "";
-    }
-
-    private void addGzipRequestInterceptor(final DefaultHttpClient httpclient) {
-        httpclient.addRequestInterceptor(new HttpRequestInterceptor() {
-            @Override
-            public void process(final HttpRequest request,
-                                final HttpContext context) throws HttpException, IOException {
-                if (!request.containsHeader("Accept-Encoding")) {
-                    request.addHeader("Accept-Encoding", "gzip");
-                }
-            }
-        });
-    }
-
-    private void addGzipResponseInterceptor(final DefaultHttpClient httpclient) {
-        httpclient.addResponseInterceptor(new HttpResponseInterceptor() {
-            @Override
-            public void process(final HttpResponse response,
-                                final HttpContext context) throws HttpException, IOException {
-                HttpEntity entity = response.getEntity();
-                Header ceheader = entity.getContentEncoding();
-                if (ceheader != null) {
-                    for (HeaderElement codec : ceheader.getElements()) {
-                        if (codec.getName().equalsIgnoreCase("gzip")) {
-                            response.setEntity(new GzipDecompressingEntity(response.getEntity()));
-                            return;
-                        }
-                    }
-                }
-            }
-        });
+        return wikiAPIClient.executeHTTPRequest(urlStr);
     }
 
 }
