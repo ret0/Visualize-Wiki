@@ -8,7 +8,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 public class Revisions {
-//    TODO: should be merged with class in API!
 
     private final String articleName;
 
