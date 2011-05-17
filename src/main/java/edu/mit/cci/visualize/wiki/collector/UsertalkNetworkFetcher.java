@@ -2,39 +2,45 @@ package edu.mit.cci.visualize.wiki.collector;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.List;
 
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.Lists;
 
 import edu.mit.cci.visualize.wiki.util.Const;
 import edu.mit.cci.visualize.wiki.util.WikiAPIClient;
 import edu.mit.cci.visualize.wiki.xml.Api;
 import edu.mit.cci.visualize.wiki.xml.XMLTransformer;
 
-public class GetUsertalkNetwork {
+public class UsertalkNetworkFetcher {
 
-    private static final Logger LOG = LoggerFactory.getLogger(GetUsertalkNetwork.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(UsertalkNetworkFetcher.class.getName());
+    private final String lang;
 
-    public String getNetwork(final String lang, final String nodes) {
+    public UsertalkNetworkFetcher(final String lang) {
+        this.lang = lang;
+    }
+
+    public String getNetwork(final List<String> userIDs) {
+        List<String> sanitizedUserIDs = sanitizeUserIDs(userIDs);
         String data = "";
         DefaultHttpClient httpclient = new DefaultHttpClient();
         WikiAPIClient wikiAPIClient = new WikiAPIClient(httpclient, false);
         try {
-            String[] node = nodes.split("\n");
-            int[][] userTalkMatrix = new int[node.length][node.length];
+            int numberOfUsersInNetwork = sanitizedUserIDs.size();
+            int[][] userTalkMatrix = new int[numberOfUsersInNetwork][numberOfUsersInNetwork];
 
-            for (int i = 0; i < node.length; i++) {
-                for (int j = 0; j < node.length; j++) {
+            for (int i = 0; i < numberOfUsersInNetwork; i++) {
+                for (int j = 0; j < numberOfUsersInNetwork; j++) {
                     if (i == j) {
                         continue;
                     }
-                    String from = node[i].split("\t")[0];
-                    from = from.replaceAll(" ", "_");
-                    String to = node[j].split("\t")[0];
-                    to = to.replaceAll(" ", "_");
-
-                    String xml = getUserTalkContribs(lang, to, from, wikiAPIClient);
+                    String from = sanitizedUserIDs.get(i);
+                    String to = sanitizedUserIDs.get(j);
+                    String xml = getUserTalkContribs(to, from, wikiAPIClient);
                     if (xml.indexOf("<revisions>") > 0) {
                         Api revisionFromXML = XMLTransformer.getRevisionFromXML(xml);
                         int numberOfRevisions = revisionFromXML.getAllRevisionsForRequest().size();
@@ -46,9 +52,9 @@ public class GetUsertalkNetwork {
             }
             for (int i = 0; i < userTalkMatrix.length; i++) {
                 for (int j = i + 1; j < userTalkMatrix[i].length; j++) {
-                    int value = userTalkMatrix[i][j] + userTalkMatrix[j][i]; //sum of talk in both directions
-                    if (value > 0) {
-                        data += node[i].split("\t")[0] + "\t" + node[j].split("\t")[0] + "\t" + value + "\n";
+                    int totalConversations = userTalkMatrix[i][j] + userTalkMatrix[j][i]; //sum of talk in both directions
+                    if (totalConversations > 0) {
+                        data += sanitizedUserIDs.get(i) + "\t" + sanitizedUserIDs.get(j) + "\t" + totalConversations + "\n";
                     }
                 }
             }
@@ -60,8 +66,15 @@ public class GetUsertalkNetwork {
         return data;
     }
 
-    private String getUserTalkContribs(final String lang,
-                                       String to,
+    private List<String> sanitizeUserIDs(final List<String> userIDs) {
+        List<String> sanitizedUserIDs = Lists.newArrayList();
+        for (String id : userIDs) {
+            sanitizedUserIDs.add(id.replaceAll(" ", "_"));
+        }
+        return sanitizedUserIDs;
+    }
+
+    private String getUserTalkContribs(String to,
                                        String from,
                                        final WikiAPIClient wikiAPIClient) {
         try {
@@ -71,7 +84,6 @@ public class GetUsertalkNetwork {
                     + lang
                     + ".wikipedia.org/w/api.php?format=xml&action=query&prop=revisions&titles=User%20talk:"
                     + to + "&rvlimit=500&rvprop=flags%7Ctimestamp%7Cuser%7Csize&rvuser=" + from;
-            LOG.info(urlStr);
             return wikiAPIClient.executeHTTPRequest(urlStr);
         } catch (UnsupportedEncodingException e) {
             LOG.error("UnsupportedEncodingException", e);
