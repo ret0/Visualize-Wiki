@@ -16,8 +16,7 @@ public class GetRevisions {
 
     private final static Logger LOG = LoggerFactory.getLogger(GetRevisions.class.getName());
 
-    public Revisions getArticleRevisions(final String lang,
-                                         final String title) {
+    public Revisions getArticleRevisions(final String lang, final String title) {
 
         final String articleName = title.replaceAll(" ", "_");
         Revisions revisionsResult = new Revisions(articleName);

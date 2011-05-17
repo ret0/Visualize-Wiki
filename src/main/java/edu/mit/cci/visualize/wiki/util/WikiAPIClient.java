@@ -1,6 +1,7 @@
 package edu.mit.cci.visualize.wiki.util;
 
 import java.io.IOException;
+import java.net.SocketTimeoutException;
 
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
@@ -60,6 +61,8 @@ public class WikiAPIClient {
 
         } catch (ClientProtocolException e) {
             LOG.error("ClientProtocolException", e);
+        } catch (SocketTimeoutException e) {
+            LOG.error("Timeout!", e);
         } catch (IOException e) {
             LOG.error("IOException", e);
         }
