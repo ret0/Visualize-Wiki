@@ -54,9 +54,9 @@ public class WikipediaUsertalkVizServlet {
         List<String> editRanking = new MapSorter().generateTopAuthorRanking(revisionData, Integer.parseInt(nodeLimit));
 
         String nodes = "";
-        for (int i = 0; i < editRanking.size(); i++) {
+        for (String rankingEntry : editRanking) {
             // Name \t # of edits \t # of edit articles
-            nodes += editRanking.get(i).split("\t")[1] + "\t" + editRanking.get(i).split("\t")[0] + "\t1\n";
+            nodes += rankingEntry.split("\t")[1] + "\t" + rankingEntry.split("\t")[0] + "\t1\n";
         }
 
         responseStr += writeProcessingCode(canvasSize, lang, nodes);
