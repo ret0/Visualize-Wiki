@@ -8,10 +8,10 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 import edu.mit.cci.visualize.wiki.collector.ArticleContributions;
-import edu.mit.cci.visualize.wiki.collector.GetRevisions;
 import edu.mit.cci.visualize.wiki.collector.Revisions;
 import edu.mit.cci.visualize.wiki.collector.UsertalkEdge;
-import edu.mit.cci.visualize.wiki.collector.UsertalkNetworkFetcher;
+import edu.mit.cci.visualize.wiki.fetcher.PageRevisionFetcher;
+import edu.mit.cci.visualize.wiki.fetcher.UsertalkNetworkFetcher;
 import edu.mit.cci.visualize.wiki.util.MapSorter;
 
 public class TestGetUserTalk {
@@ -21,7 +21,7 @@ public class TestGetUserTalk {
 
     @Test
     public void getUserTalk() {
-        Revisions download = new GetRevisions().getArticleRevisions(TEST_LANG, "WikiLeaks");
+        Revisions download = new PageRevisionFetcher(TEST_LANG, "WikiLeaks").getArticleRevisions();
 
         List<ArticleContributions> sortMap = new MapSorter().generateTopAuthorRanking(download, MAX_NODES);
         List<ArticleContributions> expected = Lists.newArrayList(
@@ -40,7 +40,7 @@ public class TestGetUserTalk {
 
     @Test
     public void getNetworkEdges() {
-        Revisions revisionData = new GetRevisions().getArticleRevisions(TEST_LANG, "WikiLeaks");
+        Revisions revisionData = new PageRevisionFetcher(TEST_LANG, "WikiLeaks").getArticleRevisions();
         // Sort data, with second parameter: getting Top N editors
         List<ArticleContributions> editRanking = new MapSorter().generateTopAuthorRanking(revisionData, MAX_NODES);
 

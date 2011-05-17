@@ -12,10 +12,10 @@ import javax.servlet.http.HttpServletRequest;
 import com.google.common.collect.Lists;
 
 import edu.mit.cci.visualize.wiki.collector.ArticleContributions;
-import edu.mit.cci.visualize.wiki.collector.GetRevisions;
 import edu.mit.cci.visualize.wiki.collector.Revisions;
 import edu.mit.cci.visualize.wiki.collector.UsertalkEdge;
-import edu.mit.cci.visualize.wiki.collector.UsertalkNetworkFetcher;
+import edu.mit.cci.visualize.wiki.fetcher.PageRevisionFetcher;
+import edu.mit.cci.visualize.wiki.fetcher.UsertalkNetworkFetcher;
 import edu.mit.cci.visualize.wiki.util.MapSorter;
 import edu.mit.cci.visualize.wiki.util.Processing;
 
@@ -52,7 +52,7 @@ public class WikipediaUsertalkVizServlet {
         // Language
         String lang = readStringParameter("lang", "en");
 
-        Revisions revisionData = new GetRevisions().getArticleRevisions(lang, pageTitle);
+        Revisions revisionData = new PageRevisionFetcher(lang, pageTitle).getArticleRevisions();
 
         // Sort data, with second parameter: getting Top N editors
         List<ArticleContributions> editRanking = new MapSorter().generateTopAuthorRanking(revisionData, Integer.parseInt(nodeLimit));

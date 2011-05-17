@@ -1,4 +1,4 @@
-package edu.mit.cci.visualize.wiki.collector;
+package edu.mit.cci.visualize.wiki.fetcher;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
+import edu.mit.cci.visualize.wiki.collector.UsertalkEdge;
 import edu.mit.cci.visualize.wiki.util.Const;
 import edu.mit.cci.visualize.wiki.util.WikiAPIClient;
 import edu.mit.cci.visualize.wiki.xml.Api;
