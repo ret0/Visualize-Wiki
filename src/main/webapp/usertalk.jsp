@@ -1,5 +1,8 @@
-<%@page import="edu.mit.cci.visualize.wiki.vizservlet.WikipediaUsertalkVizServlet"%>
+<%@page import="edu.mit.cci.visualize.wiki.vizservlet.WikipediaUsertalkVizServlet" %>
+<%@page import="java.util.List" %>
+<%@page import="edu.mit.cci.visualize.wiki.collector.ArticleContributions" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri='http://java.sun.com/jsp/jstl/core' prefix='c'%>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd"> 
 
@@ -27,8 +30,28 @@
 		};
 	</script>
 
- <% WikipediaUsertalkVizServlet servlet = new WikipediaUsertalkVizServlet(request, application); %>
- <%= servlet.magicMethod() %>
+ <% WikipediaUsertalkVizServlet servletz = new WikipediaUsertalkVizServlet(request); %>
+ <%
+ List<ArticleContributions> c = servletz.getContributions();
+ List<String> userIds = servletz.prepareUserIDs(c);
+ %>
+<script id="processing-code" type="application/processing">
+    <%@ include file="skeleton/spring.jsp" %>
+</script>
+<div><canvas width="400" height="400" /></div>
+ 
+<table>
+	<tbody>
+		<c:forEach items="<%=c%>" var="cont">
+			<tr>
+				<td><c:out value="${cont.userID}" /></td>
+				<td><c:out value="${cont.numberOfChanges}" /></td>
+			</tr>
+		</c:forEach>
+	</tbody>
+</table>
+
+<p id ="map" />
 
 </body>
 </html>

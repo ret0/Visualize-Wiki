@@ -37,37 +37,45 @@ public class PageRevisionFetcher {
         CacheManager manager = CacheManager.getInstance();
         Cache cache = manager.getCache("revisions");
 
-        if (cache.get(pageTitle) != null) {
-            return (Revisions) cache.get(pageTitle).getObjectValue();
+        final Element cachedValue = cache.get(pageTitle);
+        if (cachedValue != null) {
+            return (Revisions) cachedValue.getValue();
         } else {
-
-            Revisions revisionsResult = new Revisions(pageTitle);
-            try {
-                String queryContinueID = "";
-                Api revisionFromXML = null;
-                while(true) {
-                    final String xml = getArticleRevisionsXML(queryContinueID);
-                    revisionFromXML = XMLTransformer.getRevisionFromXML(xml);
-                    for (Revision rev : revisionFromXML.getAllRevisionsForRequest()) {
-                        revisionsResult.addEditEntry(rev);
-                    }
-                    if (revisionFromXML.isLastPageInRequestSeries()) {
-                        break;
-                    } else {
-                        queryContinueID = revisionFromXML.getQueryContinueID();
-                    }
-                }
-            } catch (Exception e) {
-                LOG.error("Error while executing HTTP request", e);
-            } finally {
-                httpclient.getConnectionManager().shutdown();
-            }
-            cache.put(new Element(pageTitle, revisionsResult));
-            cache.flush();
+            Revisions revisionsResult = downloadRevisions(cache);
             manager.shutdown();
             return revisionsResult;
         }
+    }
 
+    private Revisions downloadRevisions(final Cache cache) {
+        Revisions revisionsResult = new Revisions(pageTitle);
+        try {
+            addAllRevisionsToList(revisionsResult);
+        } catch (Exception e) {
+            LOG.error("Error while executing HTTP request", e);
+        } finally {
+            httpclient.getConnectionManager().shutdown();
+        }
+        cache.put(new Element(pageTitle, revisionsResult));
+        cache.flush();
+        return revisionsResult;
+    }
+
+    private void addAllRevisionsToList(final Revisions revisionsResult) throws Exception {
+        Api revisionFromXML = null;
+        String queryContinueID = "";
+        while(true) {
+            final String xml = getArticleRevisionsXML(queryContinueID);
+            revisionFromXML = XMLTransformer.getRevisionFromXML(xml);
+            for (Revision rev : revisionFromXML.getAllRevisionsForRequest()) {
+                revisionsResult.addEditEntry(rev);
+            }
+            if (revisionFromXML.isLastPageInRequestSeries()) {
+                break;
+            } else {
+                queryContinueID = revisionFromXML.getQueryContinueID();
+            }
+        }
     }
 
     private String getArticleRevisionsXML(final String nextId) {

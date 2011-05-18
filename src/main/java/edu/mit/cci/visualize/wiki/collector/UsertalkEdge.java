@@ -24,6 +24,10 @@ public class UsertalkEdge {
         return nbrOfConversations;
     }
 
+    public int getLineWidth() {
+        return (int) Math.round(Math.log10(nbrOfConversations) * 4) + 1;
+    }
+
     @Override
     public String toString() {
         return "UsertalkEdge [from=" + from + ", to=" + to + ", nbrOfConversations="
