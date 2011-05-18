@@ -64,7 +64,4 @@ public class UsertalkEdge {
         return true;
     }
 
-
-
-
 }

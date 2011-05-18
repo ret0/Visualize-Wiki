@@ -11,7 +11,6 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +34,8 @@ public class UsertalkNetworkFetcher {
     private final int numberOfUsersInNetwork;
     private final int[][] userTalkMatrix;
     private final ExecutorService newFixedThreadPool = Executors.newFixedThreadPool(NUM_THREADS);
+    private final CacheManager manager = CacheManager.getInstance();
+    private final Cache cache = manager.getCache("usertalks");
 
     public UsertalkNetworkFetcher(final String lang, final List<String> userIDs) {
         this.lang = lang;
@@ -55,6 +56,7 @@ public class UsertalkNetworkFetcher {
             }
         }
         shutdownThreadPool();
+        manager.shutdown();
         return collectUserTalkEdges();
     }
 
@@ -123,8 +125,7 @@ public class UsertalkNetworkFetcher {
 
         @Override
         public void run() {
-            CacheManager manager = CacheManager.getInstance();
-            Cache cache = manager.getCache("usertalks");
+
 
             Pair<String> userCommunicationPair = new Pair<String>(from, to);
 
@@ -147,11 +148,8 @@ public class UsertalkNetworkFetcher {
                 }
                 cache.put(new Element(userCommunicationPair, numberOfRevisions));
                 cache.flush();
-                LOG.info(StringUtils.join(cache.getKeys(), ", "));
                 userTalkMatrix[j][i] = numberOfRevisions;
             }
-
-
         }
     }
 }

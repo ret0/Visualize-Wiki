@@ -30,12 +30,10 @@ public class PageRevisionFetcher {
 
     public PageRevisionFetcher(final String lang, final String pageTitle) {
         this.lang = lang;
-        this.pageTitle = pageTitle.replaceAll(" ", "_");;
+        this.pageTitle = pageTitle.replaceAll(" ", "_");
     }
 
     public Revisions getArticleRevisions() {
-        CacheManager.create(); //TODO put this in global spot singleton Fail...
-
         CacheManager manager = CacheManager.getInstance();
         Cache cache = manager.getCache("revisions");
 
@@ -66,6 +64,7 @@ public class PageRevisionFetcher {
             }
             cache.put(new Element(pageTitle, revisionsResult));
             cache.flush();
+            manager.shutdown();
             return revisionsResult;
         }
 

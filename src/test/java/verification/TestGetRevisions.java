@@ -19,6 +19,6 @@ public class TestGetRevisions {
     @Test
     public void testGetArticleRevisionsLarge() throws Exception {
         Revisions articleRevisionsWikiLeaks = new PageRevisionFetcher("en", "WikiLeaks").getArticleRevisions();
-        Assert.assertEquals(3677, articleRevisionsWikiLeaks.getNumberOfRevisions());
+        Assert.assertEquals(3687, articleRevisionsWikiLeaks.getNumberOfRevisions());
     }
 }

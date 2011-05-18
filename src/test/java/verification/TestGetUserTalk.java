@@ -30,7 +30,7 @@ public class TestGetUserTalk {
                 new ArticleContributions(79, "Gregcaletta", 38543),
                 new ArticleContributions(78, "Veritysense", 1742),
                 new ArticleContributions(68, "Spitzl", -1128),
-                new ArticleContributions(57, "AndyTheGrump", -13505),
+                new ArticleContributions(58, "AndyTheGrump", -13534),
                 new ArticleContributions(50, "Funandtrvl", -1809),
                 new ArticleContributions(47, "Felixhonecker", -6955),
                 new ArticleContributions(46, "F.F.McGurk", -10030),
