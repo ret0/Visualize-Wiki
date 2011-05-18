@@ -1,8 +1,12 @@
 package edu.mit.cci.visualize.wiki.collector;
 
+import java.io.Serializable;
+
 import org.joda.time.DateTime;
 
-public class Revision {
+public class Revision implements Serializable {
+
+    private static final long serialVersionUID = 4868909223601860648L;
 
     private final String userID;
     private final DateTime timestamp;

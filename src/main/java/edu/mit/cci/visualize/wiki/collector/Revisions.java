@@ -1,5 +1,6 @@
 package edu.mit.cci.visualize.wiki.collector;
 
+import java.io.Serializable;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -7,7 +8,9 @@ import org.apache.commons.lang.StringUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class Revisions {
+public class Revisions implements Serializable {
+
+    private static final long serialVersionUID = -4852482473135369468L;
 
     private final String articleName;
 
