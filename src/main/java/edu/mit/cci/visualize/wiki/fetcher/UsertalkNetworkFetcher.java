@@ -7,6 +7,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +20,7 @@ import com.google.common.collect.Lists;
 
 import edu.mit.cci.visualize.wiki.collector.UsertalkEdge;
 import edu.mit.cci.visualize.wiki.util.Const;
+import edu.mit.cci.visualize.wiki.util.Pair;
 import edu.mit.cci.visualize.wiki.util.WikiAPIClient;
 import edu.mit.cci.visualize.wiki.xml.Api;
 import edu.mit.cci.visualize.wiki.xml.XMLTransformer;
@@ -117,21 +123,34 @@ public class UsertalkNetworkFetcher {
 
         @Override
         public void run() {
-            final DefaultHttpClient httpclient = new DefaultHttpClient();
-            final WikiAPIClient wikiAPIClient = new WikiAPIClient(httpclient, false);
-            final String xml = getUserTalkContribs(to, from, wikiAPIClient);
-            if (xml.indexOf("<revisions>") > 0) {
-                Api revisionFromXML;
-                try {
-                    revisionFromXML = XMLTransformer.getRevisionFromXML(xml);
-                    int numberOfRevisions = revisionFromXML.getAllRevisionsForRequest().size();
-                    if (numberOfRevisions >= 1) {
-                            userTalkMatrix[j][i] = numberOfRevisions;
+            CacheManager manager = CacheManager.getInstance();
+            Cache cache = manager.getCache("usertalks");
+
+            Pair<String> userCommunicationPair = new Pair<String>(from, to);
+
+            if(cache.get(userCommunicationPair) != null) {
+                userTalkMatrix[j][i] = (Integer) cache.get(userCommunicationPair).getValue();
+            } else {
+                final DefaultHttpClient httpclient = new DefaultHttpClient();
+                final WikiAPIClient wikiAPIClient = new WikiAPIClient(httpclient, false);
+                final String xml = getUserTalkContribs(to, from, wikiAPIClient);
+                int numberOfRevisions = 0;
+                if (xml.indexOf("<revisions>") > 0) {
+                    Api revisionFromXML;
+                    try {
+                        revisionFromXML = XMLTransformer.getRevisionFromXML(xml);
+                        numberOfRevisions = revisionFromXML.getAllRevisionsForRequest().size();
+
+                    } catch (Exception e) {
+                        LOG.error("Exception while executing Fetch Thread", e);
                     }
-                } catch (Exception e) {
-                    LOG.error("Exception while executing Fetch Thread", e);
                 }
+                cache.put(new Element(userCommunicationPair, numberOfRevisions));
+                cache.flush();
+                LOG.info(StringUtils.join(cache.getKeys(), ", "));
+                userTalkMatrix[j][i] = numberOfRevisions;
             }
+
 
         }
     }

@@ -3,6 +3,10 @@ package edu.mit.cci.visualize.wiki.fetcher;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,28 +34,41 @@ public class PageRevisionFetcher {
     }
 
     public Revisions getArticleRevisions() {
-        Revisions revisionsResult = new Revisions(pageTitle);
-        try {
-            String queryContinueID = "";
-            Api revisionFromXML = null;
-            while(true) {
-                final String xml = getArticleRevisionsXML(queryContinueID);
-                revisionFromXML = XMLTransformer.getRevisionFromXML(xml);
-                for (Revision rev : revisionFromXML.getAllRevisionsForRequest()) {
-                    revisionsResult.addEditEntry(rev);
+        CacheManager.create(); //TODO put this in global spot singleton Fail...
+
+        CacheManager manager = CacheManager.getInstance();
+        Cache cache = manager.getCache("revisions");
+
+        if (cache.get(pageTitle) != null) {
+            return (Revisions) cache.get(pageTitle).getObjectValue();
+        } else {
+
+            Revisions revisionsResult = new Revisions(pageTitle);
+            try {
+                String queryContinueID = "";
+                Api revisionFromXML = null;
+                while(true) {
+                    final String xml = getArticleRevisionsXML(queryContinueID);
+                    revisionFromXML = XMLTransformer.getRevisionFromXML(xml);
+                    for (Revision rev : revisionFromXML.getAllRevisionsForRequest()) {
+                        revisionsResult.addEditEntry(rev);
+                    }
+                    if (revisionFromXML.isLastPageInRequestSeries()) {
+                        break;
+                    } else {
+                        queryContinueID = revisionFromXML.getQueryContinueID();
+                    }
                 }
-                if (revisionFromXML.isLastPageInRequestSeries()) {
-                    break;
-                } else {
-                    queryContinueID = revisionFromXML.getQueryContinueID();
-                }
+            } catch (Exception e) {
+                LOG.error("Error while executing HTTP request", e);
+            } finally {
+                httpclient.getConnectionManager().shutdown();
             }
-        } catch (Exception e) {
-           LOG.error("Error while executing HTTP request", e);
-        } finally {
-            httpclient.getConnectionManager().shutdown();
+            cache.put(new Element(pageTitle, revisionsResult));
+            cache.flush();
+            return revisionsResult;
         }
-        return revisionsResult;
+
     }
 
     private String getArticleRevisionsXML(final String nextId) {

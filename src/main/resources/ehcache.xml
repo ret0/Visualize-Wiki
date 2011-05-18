@@ -1,0 +1,26 @@
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="ehcache.xsd">
+    <diskStore path="/tmp/ehcache"/>
+    <defaultCache
+        maxElementsInMemory="0"
+    />
+
+    <cache 
+        name="revisions" 
+        maxElementsInMemory="10000"
+        eternal="true"
+        overflowToDisk="true"
+        diskPersistent="true"
+        memoryStoreEvictionPolicy="LFU"
+    />
+        
+    <cache 
+        name="usertalks" 
+        maxElementsInMemory="10000"
+        eternal="true"
+        overflowToDisk="true"
+        diskPersistent="true"
+        memoryStoreEvictionPolicy="LFU"
+    />
+        
+    
+</ehcache>
