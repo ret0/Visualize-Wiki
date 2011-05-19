@@ -1,5 +1,9 @@
 package edu.mit.cci.visualize.wiki.collector;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,8 +14,8 @@ public class ArticleContributions {
     private static final Logger LOG = LoggerFactory.getLogger(ArticleContributions.class.getName());
 
     // red to green
-    private static final String[] experienceColors = { "#ff0033", "#ff3333", "#ff6633",
-        "#ff9933", "#ffcc33", "#ffff33", "#ccff33", "#99ff33", "#66ff33", "#33ff33"};
+    private static final String[] experienceColors = { "#ff0033", "#ff3333", "#ff6633", "#ff9933",
+            "#ffcc33", "#ffff33", "#ccff33", "#99ff33", "#66ff33", "#33ff33" };
 
     public static String[] getExperiencecolors() {
         return experienceColors;
@@ -20,11 +24,13 @@ public class ArticleContributions {
     private final String userID;
     private final int numberOfChanges;
     private final int editSize;
+    private final int userExperience;
 
     public ArticleContributions(final int numberOfChanges, final String userID, final int editSize) {
         this.numberOfChanges = numberOfChanges;
         this.userID = userID;
         this.editSize = editSize;
+        this.userExperience = getUserExperience();
     }
 
     public String getUserID() {
@@ -48,21 +54,36 @@ public class ArticleContributions {
     }
 
     public String getExperienceColor() {
-        UserDetailFetcher detailFetcher = new UserDetailFetcher(userID, "en"); // TODO lang!
-        int usersScore;
-        try {
-            usersScore = detailFetcher.downloadUsersScore();
-            usersScore = (int) Math.log10(usersScore);
-            LOG.info("Fetched Score for User: " + userID + " Score: " + usersScore);
-            if (usersScore >= experienceColors.length) {
-                return experienceColors[experienceColors.length -1];
-            } else {
-                return experienceColors[usersScore];
-            }
-        } catch (Exception e) {
-            LOG.error("Problem while getting experience for User: " + userID);
-            return "#FFFFFF"; //white
+        if (userExperience < 0) {
+            return "#FFFFFF"; // white
+        } else if (userExperience >= 0 && userExperience < 400) {
+            final int wtf = userExperience/40;
+            return experienceColors[wtf];
+        } else {
+            return experienceColors[experienceColors.length - 1];
         }
+    }
+
+    private int getUserExperience() {
+        final CacheManager cacheManager = CacheManager.getInstance();
+        final Cache userExperienceCache = cacheManager.getCache("userexperience");
+        Element cacheElement = userExperienceCache.get(userID);
+
+        if(cacheElement != null) {
+            return (Integer) cacheElement.getValue();
+        } else {
+            UserDetailFetcher detailFetcher = new UserDetailFetcher(userID, "en"); // TODO lang!
+            try {
+                int usersScore = detailFetcher.downloadUsersScore();
+                LOG.info("Fetched Score for User: " + userID + " Score: " + usersScore);
+                userExperienceCache.put(new Element(userID, usersScore));
+                return usersScore;
+            } catch (Exception e) {
+                LOG.error("Problem while getting experience for User: " + userID);
+                return -1;
+            }
+        }
+
     }
 
     @Override
@@ -101,6 +122,5 @@ public class ArticleContributions {
         return "ArticleContributions [userID=" + userID + ", numberOfChanges=" + numberOfChanges
                 + ", editSize=" + editSize + "]";
     }
-
 
 }

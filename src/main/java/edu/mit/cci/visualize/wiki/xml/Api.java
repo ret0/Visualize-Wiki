@@ -73,7 +73,7 @@ public class Api {
         int daysSinceRegistration = Days.daysBetween(userRegisteredAt, now).getDays();
         Double activity = editCount / daysSinceRegistration;
         Double score = 0.3 * daysSinceRegistration + 0.3 * editCount + 0.4 * activity;
-        return (int) Math.round(score);
+        return (int) Math.round(score) / 100;
     }
 }
 
