@@ -1,4 +1,5 @@
 <%@page import="edu.mit.cci.visualize.wiki.vizservlet.WikipediaUsertalkVizServlet" %>
+<%@page import="edu.mit.cci.visualize.wiki.util.Const" %>
 <%@page import="java.util.List" %>
 <%@page import="edu.mit.cci.visualize.wiki.collector.ArticleContributions" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
@@ -23,26 +24,39 @@
 	<script type="text/javascript">
 		// start processing.js
 		window.onload=function() {
-			jQuery("table").treemap(300, 300, {dataCell:1, labelCell:0});
+			jQuery("table#contrib-map").treemap(300, 300, {dataCell:1, labelCell:0});
 			var canvas = document.getElementsByTagName('canvas')[0];
 			var codeElement = document.getElementById('processing-code');
 			var code = codeElement.textContent || codeElement.innerText;
 		};
 	</script>
 
- <% WikipediaUsertalkVizServlet servletz = new WikipediaUsertalkVizServlet(request); %>
- <%
- List<ArticleContributions> c = servletz.getContributions();
- List<String> userIds = servletz.prepareUserIDs(c);
- %>
+<% 
+	WikipediaUsertalkVizServlet servletz = new WikipediaUsertalkVizServlet(request);
+	List<ArticleContributions> contributions = servletz.getContributions();
+	List<String> userIds = servletz.prepareUserIDs(contributions);
+%>
+
+
 <script id="processing-code" type="application/processing">
     <%@ include file="skeleton/spring.jsp" %>
 </script>
-<div><canvas width="400" height="400" /></div>
- 
+
+<div><canvas width="<%= Const.CANVAS_SIZE %>" height="<%= Const.CANVAS_SIZE %>" /></div>
+
 <table>
+    <tbody>
+            <tr>
+	            <c:forEach items="<%= ArticleContributions.getExperiencecolors() %>" var="color">
+	                <td style="background-color: <c:out value="${color}" />">cc</td>
+	            </c:forEach>
+            </tr>
+    </tbody>
+</table>
+ 
+<table id="contrib-map">
 	<tbody>
-		<c:forEach items="<%=c%>" var="cont">
+		<c:forEach items="<%= contributions %>" var="cont">
 			<tr>
 				<td><c:out value="${cont.userID}" /></td>
 				<td><c:out value="${cont.numberOfChanges}" /></td>

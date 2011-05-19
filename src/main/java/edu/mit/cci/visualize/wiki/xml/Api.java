@@ -2,6 +2,8 @@ package edu.mit.cci.visualize.wiki.xml;
 
 import java.util.List;
 
+import org.joda.time.DateTime;
+import org.joda.time.Days;
 import org.simpleframework.xml.Attribute;
 import org.simpleframework.xml.Element;
 import org.simpleframework.xml.ElementList;
@@ -57,6 +59,22 @@ public class Api {
         }
 	    return revisionsInRequest;
 	}
+
+    /**
+     * activity = editCount / daysSinceRegistration
+     * Score = 0.3 * daysSinceRegistration + 0.3 * editCount + 0.4 * activity
+     * @param userXML
+     */
+    public int generateScoreForUser() {
+        User user = query.getUsers().get(0);
+        Double editCount = Double.valueOf(user.getEditcount());
+        DateTime now = new DateTime();
+        DateTime userRegisteredAt = new DateTime(user.getRegistration());
+        int daysSinceRegistration = Days.daysBetween(userRegisteredAt, now).getDays();
+        Double activity = editCount / daysSinceRegistration;
+        Double score = 0.3 * daysSinceRegistration + 0.3 * editCount + 0.4 * activity;
+        return (int) Math.round(score);
+    }
 }
 
 @Root(strict = false)

@@ -215,10 +215,22 @@ var Particle = function(label, x, y, size, velocityX, velocityY, col) {
     };  
 }
 
+<%@page import="java.util.List" %>
+<%@page import="java.util.Map" %>
+<%@page import="edu.mit.cci.visualize.wiki.collector.ArticleContributions" %>
+<%@page import="edu.mit.cci.visualize.wiki.collector.UsertalkEdge" %>
+<%@page import="edu.mit.cci.visualize.wiki.collector.Revisions" %>
+<%@page import="edu.mit.cci.visualize.wiki.fetcher.UsertalkNetworkFetcher" %>
+<%@page import="edu.mit.cci.visualize.wiki.fetcher.PageRevisionFetcher" %>
+<%@page import="edu.mit.cci.visualize.wiki.util.MapSorter" %>
+<%@page import="edu.mit.cci.visualize.wiki.util.Const" %>
+<%@page import="com.google.common.collect.Lists" %>
+<%@ taglib uri='http://java.sun.com/jsp/jstl/core' prefix='c'%>
+
 var engine;
 var lastParticle;
 var dragging;
-int canvasSize = 400;
+int canvasSize = <%= Const.CANVAS_SIZE %>;
 PFont font;
 
 void setup() {
@@ -228,31 +240,16 @@ void setup() {
     font = createFont("SansSerif",11);
     textFont(font);
     
-<%@page import="edu.mit.cci.visualize.wiki.util.Processing"%>
-<%@page import="java.util.List" %>
-<%@page import="java.util.Map" %>
-<%@page import="edu.mit.cci.visualize.wiki.collector.ArticleContributions" %>
-<%@page import="edu.mit.cci.visualize.wiki.collector.UsertalkEdge" %>
-<%@page import="edu.mit.cci.visualize.wiki.collector.Revisions" %>
-<%@page import="edu.mit.cci.visualize.wiki.fetcher.UsertalkNetworkFetcher" %>
-<%@page import="edu.mit.cci.visualize.wiki.fetcher.PageRevisionFetcher" %>
-<%@page import="edu.mit.cci.visualize.wiki.util.MapSorter" %>
-<%@page import="com.google.common.collect.Lists" %>
-<%@ taglib uri='http://java.sun.com/jsp/jstl/core' prefix='c'%>
+
 
 <% 
-Processing p = new Processing();
-
-
-List<UsertalkEdge> edges = new UsertalkNetworkFetcher("en", userIds).getNetwork();
+List<UsertalkEdge> edges = new UsertalkNetworkFetcher("en", userIds).getNetwork();              
 %>
-
-<% Map<String, Double> nodeSizes = p.getNodeCode(c); %>
-<c:forEach items="<%= nodeSizes %>" var="cont">
-    engine.addParticle(new Particle("<c:out value="${cont.key}" />", random(0, 400), random(0, 400), "<c:out value="${cont.value}" />", 0, 0, 0x800000FF));
+<c:forEach items="<%= contributions %>" var="cont">
+    engine.addParticle(new Particle("<c:out value="${cont.userID}" />", random(0, <%= Const.CANVAS_SIZE %>), random(0, <%= Const.CANVAS_SIZE %>), <c:out value="${cont.graphicalNodeSize}" />, 0, 0, <c:out value="${cont.experienceColor}" />));
 </c:forEach>
 
-engine.findParticle("<%= c.get(0).getUserID() %>").pin(400/2, 400/2);
+engine.findParticle("<c:out value="<%= contributions.get(0).getUserID() %>" />").pin(<%= Const.CANVAS_SIZE %>/2, <%= Const.CANVAS_SIZE %>/2);
 
 <c:forEach items="<%= edges %>" var="cont">
     engine.connectParticles("<c:out value="${cont.from}" />", "<c:out value="${cont.to}" />", <c:out value="${cont.lineWidth}" />);

@@ -45,7 +45,6 @@ public class WikiAPIClient {
         this(httpclient, true);
     }
 
-
     public String executeHTTPRequest(final String url) {
         try {
             HttpGet httpget = new HttpGet(url);
@@ -67,7 +66,6 @@ public class WikiAPIClient {
         LOG.error("Problem while executing request");
         return "";
     }
-
 
     private void addGzipRequestInterceptor(final DefaultHttpClient httpclient) {
         httpclient.addRequestInterceptor(new HttpRequestInterceptor() {
