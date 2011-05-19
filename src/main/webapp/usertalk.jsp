@@ -44,11 +44,12 @@
 
 <div><canvas width="<%= Const.CANVAS_SIZE %>" height="<%= Const.CANVAS_SIZE %>" /></div>
 
+Experience Level (red - green, less - more):
 <table>
     <tbody>
             <tr>
 	            <c:forEach items="<%= ArticleContributions.getExperiencecolors() %>" var="color">
-	                <td style="background-color: <c:out value="${color}" />">cc</td>
+	                <td style="background-color: <c:out value="${color}" />">&nbsp;&nbsp;</td>
 	            </c:forEach>
             </tr>
     </tbody>

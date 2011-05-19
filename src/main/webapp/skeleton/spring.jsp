@@ -131,7 +131,7 @@ var Particle = function(label, x, y, size, velocityX, velocityY, col) {
     this.gravityX = random(-0.1,0.1);
     this.gravityY = random(-0.1,0.1);
     
-    this.damping = 0.3;
+    this.damping = 0.0;
     this.col = col;
     
     this.life = -1;
