@@ -20,7 +20,7 @@ public class WikipediaUsertalkVizServlet {
 
     public WikipediaUsertalkVizServlet(final HttpServletRequest request) {
         this.request = request;
-        nodeLimit = readStringParameter("nodeLimit", "10");
+        nodeLimit = readStringParameter("nodeLimit", "20");
         lang = readStringParameter("lang", "en");
         pageTitle = readStringParameter("name", "");
     }

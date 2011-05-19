@@ -4,7 +4,7 @@ public class Const {
 
 	public static final String ENCODING = "UTF-8";
 	public static final String USER_AGENT = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_3; ja-jp) AppleWebKit/533.16 (KHTML, like Gecko) Version/5.0 Safari/533.16";
-	public static final int CANVAS_SIZE = 400;
+	public static final int CANVAS_SIZE = 700;
     public static final String ANSWER_FORMAT = "&format=xml";;
 
 }
