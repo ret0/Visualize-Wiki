@@ -95,7 +95,7 @@ public class UsertalkNetworkFetcher {
     private List<String> sanitizeUserIDs(final List<String> userIDs) {
         List<String> sanitizedUserIDs = Lists.newArrayList();
         for (String id : userIDs) {
-            sanitizedUserIDs.add(id.replaceAll(" ", "_"));
+            sanitizedUserIDs.add(id.replaceAll("_", "_")); // XXX SANI FAIL?
         }
         return sanitizedUserIDs;
     }

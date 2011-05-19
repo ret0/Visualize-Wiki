@@ -13,16 +13,20 @@ import edu.mit.cci.visualize.wiki.util.MapSorter;
 
 public class WikipediaUsertalkVizServlet {
 
-    private final HttpServletRequest request;
     private final String nodeLimit;
     private final String lang;
     private final String pageTitle;
 
     public WikipediaUsertalkVizServlet(final HttpServletRequest request) {
-        this.request = request;
-        nodeLimit = readStringParameter("nodeLimit", "20");
-        lang = readStringParameter("lang", "en");
-        pageTitle = readStringParameter("name", "");
+        nodeLimit = readStringParameter("nodeLimit", "20", request);
+        lang = readStringParameter("lang", "en", request);
+        pageTitle = readStringParameter("name", "", request);
+    }
+
+    public WikipediaUsertalkVizServlet(final String pageTitle) {
+        this.pageTitle = pageTitle;
+        this.nodeLimit = "20";
+        this.lang = "en";
     }
 
     public List<ArticleContributions> getContributions() {
@@ -38,7 +42,7 @@ public class WikipediaUsertalkVizServlet {
         return userIDs;
     }
 
-    private String readStringParameter(final String paramName, final String defaultValue) {
+    private String readStringParameter(final String paramName, final String defaultValue, final HttpServletRequest request) {
         if (request.getParameter(paramName) != null) {
             return request.getParameter(paramName);
         }
