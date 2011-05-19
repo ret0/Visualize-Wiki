@@ -2,6 +2,7 @@ package edu.mit.cci.visualize.wiki.collector;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -26,9 +27,13 @@ public class Revisions implements Serializable {
 
     public void addEditEntry(final Revision rev) {
         // ignore anonymous edits
-        if(rev.getUserID() != null) {
+        if(rev.getUserID() != null && isNotIP(rev.getUserID())) {
             edits.add(rev);
         }
+    }
+
+    private boolean isNotIP(final String userID) {
+        return !Pattern.matches("\\d+\\.\\d+\\.\\d+\\.\\d+", userID);
     }
 
     public int getNumberOfRevisions() {

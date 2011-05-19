@@ -1,6 +1,7 @@
 package verification;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import junit.framework.Assert;
 
@@ -36,5 +37,16 @@ public class TestGetUserScore {
                     }
                 }));
         Assert.assertEquals(expectedResults, downloadedScore);
+    }
+
+    @Test
+    public void ipRegexTest() {
+        String userID1 = "192.168.0.1";
+        String userID3 = "174.74.68.103";
+        String userID2 = "Jimmy.bla.bla";
+        final String ipRegex = "\\d+\\.\\d+\\.\\d+\\.\\d+";
+        Assert.assertTrue(Pattern.matches(ipRegex, userID1));
+        Assert.assertTrue(Pattern.matches(ipRegex, userID3));
+        Assert.assertFalse(Pattern.matches(ipRegex, userID2));
     }
 }

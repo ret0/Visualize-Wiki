@@ -21,6 +21,15 @@
         diskPersistent="true"
         memoryStoreEvictionPolicy="LFU"
     />
+
+    <cache 
+        name="userexperience" 
+        maxElementsInMemory="10000"
+        eternal="true"
+        overflowToDisk="true"
+        diskPersistent="true"
+        memoryStoreEvictionPolicy="LFU"
+    />
         
     
 </ehcache>
