@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 public class WikiAPIClient {
 
-    private static final int HTTP_TIMEOUT = 8000;
+    private static final int HTTP_TIMEOUT = 10000;
     private static final Logger LOG = LoggerFactory.getLogger(WikiAPIClient.class.getName());
 
     private final DefaultHttpClient httpclient;
