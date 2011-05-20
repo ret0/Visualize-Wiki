@@ -239,7 +239,7 @@ void setup() {
     smooth();
     font = createFont("SansSerif",11);
     textFont(font);
-    
+    noLoop();
 
 
 <% 
@@ -267,6 +267,7 @@ void draw() {
   //draw the particles
   engine.draw();
 }
+
  
 void mousePressed() {
   dragging = engine.particleAt(mouseX, mouseY);
@@ -275,10 +276,15 @@ void mousePressed() {
     lastParticle = dragging;
   }
 }
+
+void mouseDragged() {
+ loop();
+}
  
 void mouseReleased() {
   if (dragging!=null) {
     dragging.dragged=false;
     dragging = null;
   }
+   noLoop();
 }
